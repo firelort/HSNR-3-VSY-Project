@@ -5,62 +5,61 @@ var io = require('socket.io')(http);
 var secondHost = false;
 app.use(express.static('.'));
 
-/**
- * Rendern der Oberfläche
- */
-app.get('/', function (req, res) {
-    res.sendFile(__dirname + '/template.html');
-});
-
-/*
-/**
- * Starten des Websockets
- */
 var donethis = false;
 
 var user = {};
 var usernames = {};
 
-
 io.on('connection', function (socket) {
 
+
+    /**
+     * Es kam eine Verbindung auf den 2. Server, versuche eine Weiterleitung von Port 80 auf 3000 zu erzwingen
+     * um Zugriff auf die Standard URL weiterhin zu ermöglichen
+     */
     if (secondHost && !donethis) {
         donethis = true;
-        console.log("Erster server abgeschmiert");
+        console.log("Hauptserver nicht mehr verfügbar, weiterleitung für künfutgie Verbindungen erstellen");
         var fork = require('child_process').fork;
-        var child = fork('./index.js');
-
+        var child = fork('./index.js'); // ersetzen durch forwarding script
+        // TODO Daten vom ersten Server ziehen -> Ausfallsicherheit!
     }
 
+
+    /**
+     * Default-Namen setzen
+     */
     if (!user.hasOwnProperty(socket.id)) {
         user[socket.id] = {"name": "Unbekannt"};
     }
 
-
-    socket.on('time', function (date) {
-        console.log('time');
-    })
-
-    //console.log(socket);
+    /**
+     * Usernamen setzen für den Socket
+     */
     socket.on('set username', function (msg) {
-        console.log(msg);
+
+        // existiert Benutzer bereits?
         if (!usernames.hasOwnProperty(msg)) {
+            // Username frei, Werte speichern und Erfolg melden
             usernames[msg] = socket.id;
             user[socket.id].name = msg;
             socket.emit('set username', {
                 'code': 200, 'msg': "ok", 'error': false
             });
 
+            // Andere über Beitritt des neuen Nutzers informieren
             socket.broadcast.emit('chat message', {
                 msg: user[socket.id].name + " ist dem server beigetreten ",
                 type: 'event',
                 servertimestamp: Date.now()
             });
+
+            // Benutzerliste updaten
             io.emit('user update', usernames);
 
 
         } else {
-
+            // Username exisitert, Fehler ausgeben
             socket.emit('set username', {
                 'code': 409, 'msg': "conflict: name '" + msg + "' existiert bereits", 'error': true
             });
@@ -69,7 +68,8 @@ io.on('connection', function (socket) {
 
     });
 
-
+    // Gegenspieler mitteilen welches Feld gespielt wurde
+    // TODO für verschiedene Spiele anpassen
     socket.on('game move', function (data) {
         socket.broadcast.emit('accepted game move', {
 
@@ -82,10 +82,15 @@ io.on('connection', function (socket) {
 
     });
 
+    // Spieler zu einem Spiel einladen
     socket.on('invite player', function (data) {
+
+        // prüfen ob der Benutzer noch online ist
         if (!usernames.hasOwnProperty(data)) {
-            console.log(data + ' is rip');
+            console.log(data + ' ist nicht mehr online');
+            // TODO Anfragen Spieler benachrichtigen
         } else {
+            // Spieler noch online, Einladung anzeigen
             console.log(usernames[data] + ' wurde eingeladen von ' + user[socket.id].name);
             io.to(`${usernames[data]}`).emit('chat message', {
                 msg: user[socket.id].name + " lädt dich ein  ",
@@ -93,17 +98,17 @@ io.on('connection', function (socket) {
                 servertimestamp: Date.now()
             })
         }
-
-
     });
 
+
+    // Zeigt an ob jemand tipp, eventuell bessere Nachrichteb anzeigen lassen wie z.B.
+    // $NAME tippt oder mehrere Leute tippen
     socket.on('typing', function (msg) {
-
         socket.broadcast.emit('typing', msg);
-
     });
 
-    //console.log(socket);
+
+    // Chatnachricht senden
     socket.on('chat message', function (data) {
         console.log(data.msg);
         data.type = "message";
@@ -114,6 +119,8 @@ io.on('connection', function (socket) {
         io.emit('chat message', data);
     });
 
+
+    // Beim schließen der Verbindung eine Meldung an andere Nutzer senden und Spieler aus Listen entfernen
     socket.on('disconnect', function () {
         console.log(user[socket.id].name + ' disconnected');
         data = {"msg": user[socket.id].name + " hat den Server verlassen", type: "event", servertimestamp: Date.now()};
@@ -125,28 +132,23 @@ io.on('connection', function (socket) {
 
 });
 
+
 /**
  * Starten des Servers
  */
-
-
 function startServer() {
+
     http.listen(80, function () {
         console.log('listening on *:80');
 
     }).on('error', function () {
-
-        console.log("port belegt versuche port 3000");
-
-
+        console.log("Port belegt versuche Port 3000");
         http.listen(3000, function () {
             console.log('listening on *:3000');
-
             secondHost = true;
 
-
         }).on('error', function (data) {
-            console.log("chaos")
+            console.log("Beide Ports belegt, Prozess kann nicht benutzt werden.")
         });
 
 
@@ -154,6 +156,5 @@ function startServer() {
 
 
 }
-
 
 startServer();
