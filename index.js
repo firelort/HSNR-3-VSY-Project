@@ -36,13 +36,13 @@ io.on('connection', function (socket) {
     /**
      * Usernamen setzen für den Socket
      */
-    socket.on('set username', function (msg) {
+    socket.on('set username', function (username) {
 
         // existiert Benutzer bereits?
-        if (!usernames.hasOwnProperty(msg)) {
+        if (!usernames.hasOwnProperty(username)) {
             // Username frei, Werte speichern und Erfolg melden
-            usernames[msg] = socket.id;
-            user[socket.id].name = msg;
+            usernames[username] = socket.id;
+            user[socket.id].name = username;
             socket.emit('set username', {
                 'code': 200, 'msg': "ok", 'error': false
             });
@@ -61,7 +61,7 @@ io.on('connection', function (socket) {
         } else {
             // Username exisitert, Fehler ausgeben
             socket.emit('set username', {
-                'code': 409, 'msg': "conflict: name '" + msg + "' existiert bereits", 'error': true
+                'code': 409, 'msg': "conflict: name '" + username + "' existiert bereits", 'error': true
             });
         }
 
