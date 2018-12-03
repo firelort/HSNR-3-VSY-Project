@@ -13,6 +13,14 @@ var usernames = {};
 io.on('connection', function (socket) {
 
 
+
+
+    if(secondHost ){
+        if(typeof socket.isChecked == 'undefined' || socket.isChecked == null){
+            // überprüfen und isChecked setzen
+        }
+    }
+
     /**
      * Es kam eine Verbindung auf den 2. Server, versuche eine Weiterleitung von Port 80 auf 3000 zu erzwingen
      * um Zugriff auf die Standard URL weiterhin zu ermöglichen
