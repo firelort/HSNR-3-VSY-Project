@@ -404,7 +404,7 @@
         socket = io.connect('http://localhost', {
             'reconnection': true,
             'reconnectionDelay': 1000,
-            'reconnectionDelayMax' : 5000,
+            'reconnectionDelayMax': 5000,
             'reconnectionAttempts': 1
         });
         socket.on('connect_error', handleNoConnect);
@@ -440,20 +440,17 @@
             });
 
         function handleNoConnect() {
-            console.log("No connection to :80");
-            if(!donethis){
+            if (!donethis) {
 
 
                 delete socket;
                 socket = io.connect('http://localhost:3000', {
-                    'forceNew' : true,
+                    'forceNew': true,
                     'reconnection': true,
                     'reconnectionDelay': 1000,
-                    'reconnectionDelayMax' : 5000,
+                    'reconnectionDelayMax': 5000,
                     'reconnectionAttempts': 2
                 });
-
-                console.log(socket.io.uri);
                 socket.on('connect_error', handleNoConnect2);
                 socket.on('connect_timeout', handleNoConnect2);
                 socket.on('connect', onConnect);
@@ -462,21 +459,18 @@
         }
 
         function handleNoConnect2() {
-            console.log("No connection to :3000");
             // decide what to do when you can't connect to either
         }
 
         function onConnect() {
-            console.log("connected");
-
             // set other event handlers on a connected socket
             socket.on('disconnect', function () {
-                console.log("disconnected");
+
             }).on('chat message', function (msg) {
                 if (isLoggedIn) {
                     var item = $('<li>');
                     item.addClass('message');
-                    console.log(msg);
+
                     if (msg.type == 'message') {
                         item.html("<b>" + msg.name + "</b>: " + msg.msg);
                     } else if (msg.type == 'event') {
@@ -489,7 +483,6 @@
 
                 var item = $('<li>');
                 item.addClass('message');
-                console.log(data);
 
                 item.html("<i>" + data.msg + "</i>");
                 $('.player-field tr').eq(data.move.row).find('td').eq(data.move.column).addClass('active')
@@ -497,7 +490,6 @@
                 $('#messages').append(item);
 
             }).on('set username', function (msg) {
-                console.log(msg);
                 if (!msg.error) {
                     $('.login-wrapper').hide();
                     isLoggedIn = true;
@@ -513,11 +505,9 @@
                 }
             }).on('user update', function (usernames) {
 
-                console.log(usernames);
                 var userList = [];
 
                 $.each(usernames, function (k, entry) {
-                    console.log(entry);
                     userList.push("<li><a class='player-link' href='#'>" + k + "</a></li>");
 
                 });
@@ -554,7 +544,6 @@
 
             $(this).addClass('active');
             let etop = ($(this).offset().top);
-            console.log(parseInt(etop) + parseInt($(this).height()));
             let text = $(this).text() + " zum Spiel einladen";
             let template = `<li><a data-player="${$(this).text()}" class="player-invite" href="#">${text}</a></li>`;
 
@@ -581,27 +570,31 @@
 
         $(".game-player-container tbody tr").click(function (e) {
 
-            if ((this.rowIndex) >= 1 && (this.rowIndex) <= 10 && e.target.cellIndex >= 1 && e.target.cellIndex <= 10) {
-                //  socket.emit('game move', {row: this.rowIndex, column: (e.target.cellIndex)});
-                positionShip({row: this.rowIndex, column: (e.target.cellIndex)});
-                console.log({row: this.rowIndex, column: (e.target.cellIndex)});
+            let row = this.rowIndex;
+            let column = e.target.cellIndex;
+            if ((row) >= 1 && (row) <= 10 && column >= 1 && column <= 10) {
+                positionShip({row: row, column: column});
             }
 
         });
 
         function positionShip(position) {
+            let clickedCell = $('.game-player-container .player-field tr').eq(position.row).find('td').eq(position.column);
+            if (clickedCell.hasClass('active') || clickedCell.hasClass('highlighted')) {
+                console.log("invalid"); // TODO spieler wissen lassen
+                return false;
+            }
             if (!hasStartPosition) {
-                console.log("no start pos");
                 startPosition = position;
-                $('.game-player-container .player-field tr').eq(position.row).find('td').eq(position.column).addClass('active');
+                clickedCell.addClass('highlighted');
             } else {
-                console.log("start pos");
+                let startCell = $('.game-player-container .player-field tr').eq(startPosition.row).find('td').eq(startPosition.column)
                 if (startPosition.row == position.row || startPosition.column == position.column) {
-                    console.log("gueltig");
-                    $('.game-player-container .player-field tr').eq(position.row).find('td').eq(position.column).addClass('active');
+                    clickedCell.addClass('active');
+                    startCell.toggleClass('highlighted active');
                 } else {
-                    console.log("nungieltig");
-                    var item = $('<li>');
+                    startCell.removeClass('highlighted');
+                    let item = $('<li>');
                     item.addClass('message');
                     item.html("<i>Ungültiger Move du Bitch</i>");
                     $('#messages').append(item);
@@ -627,7 +620,6 @@
         }
 
         $('#m').keypress(function () {
-            console.log('happening');
             typing = true;
             socket.emit('typing', 'typing...');
             clearTimeout(typingTimeout);

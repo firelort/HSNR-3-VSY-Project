@@ -130,18 +130,24 @@ body, html {
 
 .player-field {
   border-collapse: collapse;
+
   td {
     color: #fff;
     width: 30px;
     height: 30px;
     background: #495057;
     border: 1px solid #000;
+
     &:nth-child(odd) {
       background: #4d4d4d;
     }
 
     &.active {
-      background: #f00 !important;
+      background: #6495ed !important;
+    }
+
+    &.highlighted {
+      background: #ff5642;
     }
   }
 }
@@ -199,6 +205,7 @@ template
   padding: 0;
   //padding-top: 30px;
   position: relative;
+
   li {
     position: relative;
   }
@@ -295,16 +302,17 @@ template
   }
 }
 
-.contextmenu-background{
+.contextmenu-background {
   position: absolute;
-  top:0;
-  left:0;
-  right:0;
+  top: 0;
+  left: 0;
+  right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.1);
   z-index: 9999;
   display: none;
 }
+
 .contextmenu {
   display: none;
   border-bottom-right-radius: .2rem;
@@ -314,6 +322,7 @@ template
   z-index: 10000;
   border: 1px solid rgba(0, 0, 0, 0.0625);
   background: #fff;
+
   .options {
     list-style-type: none;
     padding: 0;

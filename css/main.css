@@ -115,7 +115,9 @@ body, html {
     .player-field td:nth-child(odd) {
       background: #4d4d4d; }
     .player-field td.active {
-      background: #f00 !important; }
+      background: #6495ed !important; }
+    .player-field td.highlighted {
+      background: #ff5642; }
 
 /*
 template
