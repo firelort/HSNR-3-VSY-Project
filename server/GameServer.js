@@ -2,7 +2,12 @@ class GameServer {
 
     constructor() {
         this.user = {};
-        this.usernames = {}
+        this.usernames = {};
+        this.GameTypes = {
+            TICTACTOE: 1,
+            BATTLESHIPS: 2
+        };
+        Object.freeze(this.GameTypes);
 
     }
 
