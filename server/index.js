@@ -5,7 +5,7 @@ var io = require('socket.io')(http);
 var secondHost = false;
 var gameserver = require("./GameServer.js");
 
-app.use(express.static('.'));
+app.use(express.static('../client/'));
 
 var donethis = false;
 
