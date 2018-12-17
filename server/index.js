@@ -3,10 +3,14 @@ var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var secondHost = false;
+var gameserver = require("./GameServer.js");
+
 app.use(express.static('.'));
 
 var donethis = false;
 
+
+gameserver.speak();
 var user = {};
 var usernames = {};
 

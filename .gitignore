@@ -1,0 +1,5 @@
+.idea
+server/node_modules
+VSY.iml
+start server*
+package-lock.json
