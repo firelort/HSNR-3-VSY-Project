@@ -24,6 +24,10 @@ class GameServer {
         return this.user[socket.id].name;
     }
 
+    getUser(name){
+        return this.usernames[name];
+    }
+
     deleteUser(socket) {
         delete this.usernames[this.user[socket.id].name];
         delete this.user[socket.id];

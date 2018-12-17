@@ -14,8 +14,6 @@ app.get('/', function (req, res) {
 var donethis = false;
 
 io.on('connection', function (socket) {
-
-
     if (secondHost) {
         if (typeof socket.isChecked == 'undefined' || socket.isChecked == null) {
             // überprüfen und isChecked setzen
@@ -98,18 +96,19 @@ io.on('connection', function (socket) {
     socket.on('invite player', function (data) {
         console.log(data);
         // prüfen ob der Benutzer noch online ist
-        // if (!gameserver.isUser(data)) {
-        //     console.log(data + ' ist nicht mehr online');
-        //     // TODO Anfragen Spieler benachrichtigen
-        // } else {
-        //     // Spieler noch online, Einladung anzeigen
-        //     console.log(usernames[data] + ' wurde eingeladen von ' + user[socket.id].name);
-        //     io.to(`${usernames[data]}`).emit('chat message', {
-        //         msg: user[socket.id].name + " lädt dich ein  ",
-        //         type: 'event',
-        //         servertimestamp: Date.now()
-        //     })
-        // }
+        if (!gameserver.isUser(data)) {
+            socket.emit('chat', {
+                'code': 401, 'msg': "Ihr Benutzername darf nicht leer sein", 'error': true
+            });
+        } else {
+            // Spieler noch online, Einladung anzeigen
+            console.log("[EVENT] "+data + ' wurde eingeladen von ' + gameserver.getUsername(socket));
+            io.to(`${gameserver.getUser(data)}`).emit('chat message', {
+                msg: gameserver.getUsername(socket) + " lädt dich ein  ",
+                type: 'event',
+                servertimestamp: Date.now()
+            })
+        }
     });
 
 
@@ -177,4 +176,5 @@ function startServer() {
 
 }
 
+console.clear();
 startServer();
