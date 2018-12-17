@@ -1,12 +1,16 @@
 var express = require('express');
+var path = require('path');
 var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var secondHost = false;
 var gameserver = require("./GameServer.js");
 
-app.use(express.static('../client/'));
-
+const clientPath = path.resolve(path.dirname(require.main.filename) + '/../client/');
+app.use(express.static(clientPath));
+app.get('/', function (req, res) {
+    res.sendFile(clientPath + 'index.html');
+});
 var donethis = false;
 
 io.on('connection', function (socket) {
