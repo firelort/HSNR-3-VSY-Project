@@ -1,18 +1,31 @@
-
 class GameServer {
 
-    constructor(){
+    constructor() {
         this.user = {};
         this.usernames = {}
 
     }
 
-    speak(){
-        console.log("still works");
+    isUser(name) {
+        return this.usernames.hasOwnProperty(name);
     }
 
-    isUser(name){
-        return this.usernames.hasOwnProperty(name);
+    registerUser(username, socket) {
+        this.usernames[username] = socket.id;
+        this.user[socket.id] = {"name": username};
+    }
+
+    getUsername(socket) {
+        return this.user[socket.id].name;
+    }
+
+    deleteUser(socket) {
+        delete this.usernames[this.user[socket.id].name];
+        delete this.user[socket.id];
+    }
+
+    getUsernames() {
+        return this.usernames;
     }
 }
 
