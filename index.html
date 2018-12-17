@@ -390,6 +390,22 @@
 <script>
 
 
+   var chatw = class {
+
+
+        constructor() {
+            if (!chatw.instance) {
+                chatw.instance = this;
+                this.container = $("#messages");
+            }
+            return chatw.instance;
+
+        }
+    };
+    const chat = new chatw();
+    console.log(chat);
+
+
     $(function () {
 
         function log(eventName, message) {
@@ -613,17 +629,18 @@
         function setPathActive(start, end) {
 
             let startRow, startColumn, endRow, endColumn;
+            let rows = $('.game-player-container .player-field tr');
             if (start.row === end.row && start.column !== end.column) { // horizontal
                 startColumn = (start.column > end.column ? end.column : start.column);
                 endColumn = (start.column < end.column ? end.column : start.column);
                 for (let i = startColumn; i <= endColumn; i++) {
-                    $('.game-player-container .player-field tr').eq(start.row).find('td').eq(i).addClass('active');
+                    rows.eq(start.row).find('td').eq(i).addClass('active');
                 }
             } else if (start.row !== end.row && start.column === end.column) { // senkrecht
                 startRow = (start.row > end.row ? end.row : start.row);
                 endRow = (start.row < end.row ? end.row : start.row);
                 for (let i = startRow; i <= endRow; i++) {
-                    $('.game-player-container .player-field tr').eq(i).find('td').eq(start.column).addClass('active');
+                    rows.eq(i).find('td').eq(start.column).addClass('active');
                 }
             }
 
