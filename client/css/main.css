@@ -104,7 +104,43 @@ body, html {
       border: 1px solid transparent;
       transition: background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out; }
 
+.game-opponent-container:after, .game-player-container:after {
+  clear: both;
+  content: "";
+  display: table; }
+.game-opponent-container .title, .game-player-container .title {
+  color: #313435;
+  font-weight: bold;
+  line-height: 1;
+  font-size: 110%; }
+
+.player-ships {
+  float: left;
+  margin-left: 3rem; }
+  .player-ships ul {
+    margin: 0;
+    padding: 0;
+    list-style-type: none; }
+
+.ship {
+  pointer-events: none;
+  opacity: .3;
+  position: absolute;
+  z-index: 9000; }
+  .ship.senkrecht {
+    transform: rotate(90deg);
+    transform-origin: top left; }
+  .ship.uboot {
+    width: 60px; }
+  .ship.kreuzer {
+    width: 120px; }
+  .ship.zerstoerer {
+    width: 90px; }
+  .ship.schlachtschiff {
+    width: 150px; }
+
 .player-field {
+  float: left;
   border-collapse: collapse; }
   .player-field td {
     color: #fff;

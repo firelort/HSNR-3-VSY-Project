@@ -128,7 +128,69 @@ body, html {
 
 }
 
+
+.game-opponent-container, .game-player-container {
+
+  &:after {
+    clear: both;
+    content: "";
+    display: table;
+  }
+
+  .title {
+
+    color: #313435;
+    font-weight: bold;
+    line-height: 1;
+    font-size: 110%;
+  }
+
+
+}
+
+.player-ships {
+  float: left;
+  margin-left: 3rem;
+
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+  }
+}
+
+.ship {
+
+  pointer-events: none;
+  opacity: .3;
+  position: absolute;
+  z-index: 9000;
+
+  &.senkrecht {
+    transform: rotate(90deg);
+    transform-origin: top left;
+  }
+
+  &.uboot {
+    width: 60px;
+  }
+
+  &.kreuzer {
+    width: 120px;
+  }
+
+  &.zerstoerer {
+    width: 90px;
+  }
+
+  &.schlachtschiff {
+    width: 150px;
+  }
+
+}
+
 .player-field {
+  float: left;
   border-collapse: collapse;
 
   td {
