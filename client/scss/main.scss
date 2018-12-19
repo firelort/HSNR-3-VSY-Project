@@ -194,22 +194,22 @@ body, html {
   border-collapse: collapse;
 
   td {
-    color: #fff;
+    color: #000;
     width: 30px;
     height: 30px;
-    background: #495057;
+    background: #e7e8e8;
     border: 1px solid #000;
 
     &:nth-child(odd) {
-      background: #4d4d4d;
+      background: #f1f1f1;
     }
 
     &.active {
-      background: #6495ed !important;
+      background: #bdd2f6 !important;
     }
 
     &.highlighted {
-      background: #ff5642;
+      background: #f6776a;
     }
   }
 }
