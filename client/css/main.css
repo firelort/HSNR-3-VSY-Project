@@ -124,7 +124,6 @@ body, html {
 
 .ship {
   pointer-events: none;
-  opacity: .3;
   position: absolute;
   z-index: 9000; }
   .ship.senkrecht {

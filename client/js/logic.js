@@ -133,20 +133,20 @@ function positionShip(position) {
 
                         if (startPosition.row < position.row) {
                             offset = (startCell.offset());
-                            ship.offset({top: offset.top, left: offset.left + 2 * clickedCell.outerWidth()});
+                            ship.offset({top: offset.top, left: offset.left +  clickedCell.outerWidth()});
 
                         } else {
                             offset = clickedCell.offset();
-                            ship.offset({top: offset.top, left: offset.left + 2 * clickedCell.outerWidth()});
+                            ship.offset({top: offset.top, left: offset.left +  clickedCell.outerWidth()});
                         }
                     } else {
                         if (startPosition.column < position.column) {
                             offset = (startCell.offset());
-                            ship.offset({top: offset.top - clickedCell.outerHeight(), left: offset.left});
+                            ship.offset({top: offset.top , left: offset.left});
                         } else {
 
                             offset = clickedCell.offset();
-                            ship.offset({top: offset.top - clickedCell.outerHeight(), left: offset.left});
+                            ship.offset({top: offset.top, left: offset.left});
                         }
                     }
 
