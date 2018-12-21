@@ -66,16 +66,18 @@ function isLengthAvailable(length) {
     return count.data("count") > 0;
 }
 
-function isInLine(start, end) {
-    return (start.row === end.row && start.column !== end.column) || (start.column === end.column && start.row !== end.row)
+function reduceShipCounter(length) {
+    let counter = $('.game-player-container li[data-length=' + length + ']');
+    let amount = counter.data("count") - 1;
+    counter.data("count", amount);
+    counter.text(amount + " x " + length);
+    return amount;
+
 
 }
 
-function decreaseShipCounter(shiplength) {
-    console.log("Ooof");
-    let count = $('.game-player-container li[data-length=' + shiplength + ']');
-    console.log(count.data());
-    //count.attr("data-count",);
+function isInLine(start, end) {
+    return (start.row === end.row && start.column !== end.column) || (start.column === end.column && start.row !== end.row)
 
 }
 
@@ -101,66 +103,68 @@ function positionShip(position) {
             let startCell = $('.game-player-container .player-field tr').eq(startPosition.row).find('td').eq(startPosition.column);
             if (isInLine(startPosition, position)) {
 
-                console.log(isLengthAvailable(getShipLength(startPosition, position)));
+                if (isLengthAvailable(getShipLength(startPosition, position))) {
+                    if (isPathAvailable(startPosition, position)) {
 
-                decreaseShipCounter(getShipLength(startPosition, position));
-
-                if (isPathAvailable(startPosition, position)) {
-                    setPathActive(startPosition, position);
+                        console.log(reduceShipCounter(getShipLength(startPosition, position)));
+                        setPathActive(startPosition, position);
 
 
-                    let ship;
-                    switch (getShipLength(startPosition, position)) {
-                        case 2:
-                            ship = $("<img>").addClass("ship uboot").attr("src", "/images/uboot.png");
-                            break;
-                        case 3:
-                            ship = $("<img>").addClass("ship zerstoerer").attr("src", "/images/zerstoerer.png");
-                            break;
-                        case 4:
-                            ship = $("<img>").addClass("ship kreuzer").attr("src", "/images/kreuzer.png");
-                            break;
-                        case 5:
-                            ship = $("<img>").addClass("ship schlachtschiff").attr("src", "/images/schlachtschiff.png");
-                            break;
-                    }
-
-                    let offset = (clickedCell.offset());
-                    //let ship = $("<img>").addClass("ship uboot").attr("src", "/images/uboot.png");
-                    if (startPosition.column === position.column) {
-                        // hochkannt
-                        ship.addClass("senkrecht");
-
-                        if (startPosition.row < position.row) {
-                            offset = (startCell.offset());
-                            ship.offset({top: offset.top, left: offset.left +  clickedCell.outerWidth()});
-
-                        } else {
-                            offset = clickedCell.offset();
-                            ship.offset({top: offset.top, left: offset.left +  clickedCell.outerWidth()});
+                        let ship;
+                        switch (getShipLength(startPosition, position)) {
+                            case 2:
+                                ship = $("<img>").addClass("ship uboot").attr("src", "/images/uboot.png");
+                                break;
+                            case 3:
+                                ship = $("<img>").addClass("ship zerstoerer").attr("src", "/images/zerstoerer.png");
+                                break;
+                            case 4:
+                                ship = $("<img>").addClass("ship kreuzer").attr("src", "/images/kreuzer.png");
+                                break;
+                            case 5:
+                                ship = $("<img>").addClass("ship schlachtschiff").attr("src", "/images/schlachtschiff.png");
+                                break;
                         }
+
+                        let offset = (clickedCell.offset());
+                        //let ship = $("<img>").addClass("ship uboot").attr("src", "/images/uboot.png");
+                        if (startPosition.column === position.column) {
+                            // hochkannt
+                            ship.addClass("senkrecht");
+
+                            if (startPosition.row < position.row) {
+                                offset = (startCell.offset());
+                                ship.offset({top: offset.top, left: offset.left + clickedCell.outerWidth()});
+
+                            } else {
+                                offset = clickedCell.offset();
+                                ship.offset({top: offset.top, left: offset.left + clickedCell.outerWidth()});
+                            }
+                        } else {
+                            if (startPosition.column < position.column) {
+                                offset = (startCell.offset());
+                                ship.offset({top: offset.top, left: offset.left});
+                            } else {
+
+                                offset = clickedCell.offset();
+                                ship.offset({top: offset.top, left: offset.left});
+                            }
+                        }
+
+
+                        // ship.offset({top: offset.top - clickedCell.outerHeight(), left: offset.left});
+                        $('body').append(ship);
+
+
                     } else {
-                        if (startPosition.column < position.column) {
-                            offset = (startCell.offset());
-                            ship.offset({top: offset.top , left: offset.left});
-                        } else {
-
-                            offset = clickedCell.offset();
-                            ship.offset({top: offset.top, left: offset.left});
-                        }
+                        startCell.removeClass('highlighted');
+                        let item = $('<li>');
+                        item.addClass('message');
+                        item.html("<i>Ungültiger Move du Bitch</i>");
+                        $('#messages').append(item);
                     }
-
-
-                    // ship.offset({top: offset.top - clickedCell.outerHeight(), left: offset.left});
-                    $('body').append(ship);
-
-
                 } else {
-                    startCell.removeClass('highlighted');
-                    let item = $('<li>');
-                    item.addClass('message');
-                    item.html("<i>Ungültiger Move du Bitch</i>");
-                    $('#messages').append(item);
+                    //length not available oy
                 }
             }
         }
