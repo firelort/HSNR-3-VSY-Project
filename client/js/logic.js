@@ -85,7 +85,7 @@ function positionShip(position) {
     if (touchesShip(position)) {
         let item = $('<li>');
         item.addClass('message');
-        item.html("<i>Darf kein anderes SChiff berühren</i>");
+        item.html("<i>Darf kein anderes Schiff berühren</i>");
         $('#messages').append(item);
     } else {
         let clickedCell = $('.game-player-container .player-field tr').eq(position.row).find('td').eq(position.column);
@@ -160,11 +160,16 @@ function positionShip(position) {
                         startCell.removeClass('highlighted');
                         let item = $('<li>');
                         item.addClass('message');
-                        item.html("<i>Ungültiger Move du Bitch</i>");
+                        item.html("<i>Ungültiger Move</i>");
                         $('#messages').append(item);
                     }
                 } else {
                     //length not available oy
+                    $('.player-field .highlighted').removeClass('highlighted');
+                    let item = $('<li>');
+                    item.addClass('message');
+                    item.html("<i>Du hast kein Schiff in dieser Länge</i>");
+                    $('#messages').append(item);
                 }
             }
         }
