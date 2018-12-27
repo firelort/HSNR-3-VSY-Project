@@ -1,7 +1,8 @@
 var express = require('express');
 var path = require('path');
 var app = require('express')();
-var http = require('http').Server(app);
+var http = require('http');
+var server = http.createServer(app);
 var io = require('socket.io')(http);
 var secondHost = false;
 var gameserver = require("./GameServer.js");
@@ -26,9 +27,7 @@ io.on('connection', function (socket) {
      */
     if (secondHost && !donethis) {
         donethis = true;
-        console.log("Hauptserver nicht mehr verfügbar, weiterleitung für künfutgie Verbindungen erstellen");
-        var fork = require('child_process').fork;
-        var child = fork('./index.js'); // ersetzen durch forwarding script
+        console.log("Hauptserver nicht mehr verfügbar");
         // TODO Daten vom ersten Server ziehen -> Ausfallsicherheit!
     }
 
@@ -164,24 +163,23 @@ io.on('connection', function (socket) {
  * Starten des Servers
  */
 function startServer() {
+    var ports = [80,3000];
+    var i = 0;
 
-    http.listen(80, function () {
-        console.log('listening on *:80');
-
-    }).on('error', function () {
-        console.log("Port belegt versuche Port 3000");
-        http.listen(3000, function () {
-            console.log('listening on *:3000');
-            secondHost = true;
-
-        }).on('error', function (data) {
-            console.log("Beide Ports belegt, Prozess kann nicht benutzt werden.")
-        });
-
-
+    server.on('error', function () {
+        if (i < ports.length - 1) {
+            i += 1;
+            console.log("Port " + ports[i-1] + " belegt, versuche " + ports[i] + ".");
+            server.listen(ports[i]);
+            secondHost = true
+        } else {
+            console.log("Port " + ports[i] + " belegt, es gibt keinen weiteren Port.");
+        }
     });
 
-
+    server.listen(ports[i], function () {
+        console.log("listening on *:" + ports[i]);
+    });
 }
 
 console.clear();
