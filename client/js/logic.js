@@ -24,7 +24,6 @@ function isPathAvailable(start, end) {
 }
 
 function touchesShip(coordinates) {
-
     let rows = $('.game-player-container .player-field tr');
     return rows.eq(coordinates.row - 1).find('td').eq(coordinates.column).hasClass("active") // top
         || rows.eq(coordinates.row).find('td').eq(coordinates.column + 1).hasClass("active") // right
@@ -85,7 +84,7 @@ function positionShip(position) {
     if (touchesShip(position)) {
         let item = $('<li>');
         item.addClass('message');
-        item.html("<i>Darf kein anderes Schiff berühren</i>");
+        item.html("<i>Game: Darf kein anderes Schiff berühren</i>");
         $('#messages').append(item);
     } else {
         let clickedCell = $('.game-player-container .player-field tr').eq(position.row).find('td').eq(position.column);
@@ -113,16 +112,16 @@ function positionShip(position) {
                         let ship;
                         switch (getShipLength(startPosition, position)) {
                             case 2:
-                                ship = $("<img>").addClass("ship uboot").attr("src", "/images/uboot.png");
+                                ship = $("<img>").addClass("ship uboot").attr("src", "./images/uboot.png");
                                 break;
                             case 3:
-                                ship = $("<img>").addClass("ship zerstoerer").attr("src", "/images/zerstoerer.png");
+                                ship = $("<img>").addClass("ship zerstoerer").attr("src", "./images/zerstoerer.png");
                                 break;
                             case 4:
-                                ship = $("<img>").addClass("ship kreuzer").attr("src", "/images/kreuzer.png");
+                                ship = $("<img>").addClass("ship kreuzer").attr("src", "./images/kreuzer.png");
                                 break;
                             case 5:
-                                ship = $("<img>").addClass("ship schlachtschiff").attr("src", "/images/schlachtschiff.png");
+                                ship = $("<img>").addClass("ship schlachtschiff").attr("src", "./images/schlachtschiff.png");
                                 break;
                         }
 
@@ -168,7 +167,7 @@ function positionShip(position) {
                     $('.player-field .highlighted').removeClass('highlighted');
                     let item = $('<li>');
                     item.addClass('message');
-                    item.html("<i>Du hast kein Schiff in dieser Länge</i>");
+                    item.html("<i>Game: Du hast kein Schiff in dieser Länge</i>");
                     $('#messages').append(item);
                 }
             }

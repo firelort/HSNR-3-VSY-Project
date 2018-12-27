@@ -57,7 +57,6 @@ io.on('connection', function (socket) {
             socket.broadcast.emit('chat message', {
                 // msg: user[socket.id].name + " ist dem server beigetreten ",
                 msg: gameserver.getUsername(socket) + " ist dem server beigetreten",
-
                 type: 'event',
                 servertimestamp: Date.now()
             });
@@ -70,7 +69,7 @@ io.on('connection', function (socket) {
         } else {
             // Username exisitert, Fehler ausgeben
             socket.emit('set username', {
-                'code': 409, 'msg': "conflict: name '" + username + "' existiert bereits", 'error': true
+                'code': 409, 'msg': "Der Name '" + username + "' existiert bereits", 'error': true
             });
         }
 
@@ -95,27 +94,30 @@ io.on('connection', function (socket) {
     // Spieler zu einem Spiel einladen
     socket.on('invite player', function (data) {
         console.log(data);
+        var username;
         // prüfen ob der Benutzer noch online ist
         if (!gameserver.isUser(data)) {
-            socket.emit('chat', {
-                'code': 401, 'msg': "Ihr Benutzername darf nicht leer sein", 'error': true
+            socket.emit('chat message', {
+                msg: "Ihr Benutzername darf nicht leer sein", //todo wer ist ihr?
+                type: 'event',
+                servertimestamp: Date.now()
+            });
+        } else if (data === (username = gameserver.getUsername(socket))) {
+            console.log("[EVENT-ERROR] " + username + ' hat sich selber eingeladen.');
+            socket.emit('chat message', {
+                msg: "Bitte waehle einen Gegenspieler aus!",
+                type: 'event',
+                servertimestamp: Date.now()
             });
         } else {
             // Spieler noch online, Einladung anzeigen
-            console.log("[EVENT] "+data + ' wurde eingeladen von ' + gameserver.getUsername(socket));
+            console.log("[EVENT] " + data + ' wurde eingeladen von ' + username);
             io.to(`${gameserver.getUser(data)}`).emit('chat message', {
-                msg: gameserver.getUsername(socket) + " lädt dich ein  ",
+                msg: username + " lädt dich ein  ",
                 type: 'event',
                 servertimestamp: Date.now()
             })
         }
-    });
-
-
-    // Zeigt an ob jemand tipp, eventuell bessere Nachrichteb anzeigen lassen wie z.B.
-    // $NAME tippt oder mehrere Leute tippen
-    socket.on('typing', function (msg) {
-        socket.broadcast.emit('typing', msg);
     });
 
 
@@ -135,18 +137,24 @@ io.on('connection', function (socket) {
 
     // Beim schließen der Verbindung eine Meldung an andere Nutzer senden und Spieler aus Listen entfernen
     socket.on('disconnect', function () {
-        console.log("[SERVER] '" + gameserver.getUsername(socket) + "' disconnected");
-        let data = {
-            "msg": gameserver.getUsername(socket) + " hat den Server verlassen",
-            type: "event",
-            servertimestamp: Date.now()
-        };
-        socket.broadcast.emit('chat message', data);
+        //Testen, ob Benutzer angemeldet war, ob er existiert hat
+        try {
+            let username = gameserver.getUsername(socket);
+            console.log("[SERVER] '" + username + "' disconnected");
+            let data = {
+                "msg": username + " hat den Server verlassen",
+                type: "event",
+                servertimestamp: Date.now()
+            };
+            socket.broadcast.emit('chat message', data);
 
-        gameserver.deleteUser(socket);
+            gameserver.deleteUser(socket);
 
-        // Benutzerliste updaten
-        io.emit('user update', gameserver.getUsernames());
+            // Benutzerliste updaten
+            io.emit('user update', gameserver.getUsernames());
+        } catch (e) {
+            console.log("[SERVER] Ein nicht eingeloggter Nutzer hat die Verbindung unterbrochen.");
+        }
     });
 
 });
