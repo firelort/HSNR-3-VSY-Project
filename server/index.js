@@ -13,6 +13,9 @@ app.get('/', function (req, res) {
 });
 var donethis = false;
 
+
+console.log(io.sockets.adapter.rooms);
+
 io.on('connection', function (socket) {
     if (secondHost) {
         if (typeof socket.isChecked == 'undefined' || socket.isChecked == null) {
@@ -40,7 +43,7 @@ io.on('connection', function (socket) {
         // Leerstring prüfen
         if (username.trim() === "") {
             socket.emit('set username', {
-                'code': 401, 'msg': "Ihr Benutzername darf nicht leer sein", 'error': true
+                'code': 401, 'msg': "Dein Benutzername darf nicht leer sein", 'error': true
             });
             return false;
         }
@@ -94,15 +97,24 @@ io.on('connection', function (socket) {
 
     // Spieler zu einem Spiel einladen
     socket.on('invite player', function (data) {
-        console.log(data);
+
+        if (data === gameserver.getUsername(socket)) {
+            socket.emit('chat message', {
+                code: 401,
+                msg: "Du kannst dich nicht selbst einladen.",
+                type: 'event',
+                'error': true
+            });
+            return false;
+        }
         // prüfen ob der Benutzer noch online ist
         if (!gameserver.isUser(data)) {
-            socket.emit('chat', {
-                'code': 401, 'msg': "Ihr Benutzername darf nicht leer sein", 'error': true
+            socket.emit('chat message', {
+                'code': 401, 'msg': data + " ist nicht online.", 'error': true
             });
         } else {
             // Spieler noch online, Einladung anzeigen
-            console.log("[EVENT] "+data + ' wurde eingeladen von ' + gameserver.getUsername(socket));
+            console.log("[EVENT] " + data + ' wurde eingeladen von ' + gameserver.getUsername(socket));
             io.to(`${gameserver.getUser(data)}`).emit('chat message', {
                 msg: gameserver.getUsername(socket) + " lädt dich ein  ",
                 type: 'event',

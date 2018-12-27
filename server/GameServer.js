@@ -3,6 +3,7 @@ class GameServer {
     constructor() {
         this.user = {};
         this.usernames = {};
+        this.rooms = {};
         this.GameTypes = {
             TICTACTOE: 1,
             BATTLESHIPS: 2
