@@ -1,8 +1,7 @@
 var express = require('express');
 var path = require('path');
 var app = require('express')();
-var http = require('http');
-var server = http.createServer(app);
+var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var secondHost = false;
 var gameserver = require("./GameServer.js");
@@ -174,18 +173,18 @@ function startServer() {
     var ports = [80,3000];
     var i = 0;
 
-    server.on('error', function () {
+    http.on('error', function () {
         if (i < ports.length - 1) {
             i += 1;
             console.log("Port " + ports[i-1] + " belegt, versuche " + ports[i] + ".");
-            server.listen(ports[i]);
+            http.listen(ports[i]);
             secondHost = true
         } else {
             console.log("Port " + ports[i] + " belegt, es gibt keinen weiteren Port.");
         }
     });
 
-    server.listen(ports[i], function () {
+    http.listen(ports[i], function () {
         console.log("listening on *:" + ports[i]);
     });
 }
