@@ -306,4 +306,28 @@ template
         display: block;
         padding: .3rem 1rem; }
 
+.connection-error {
+  height: 100%;
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-align: center;
+  align-items: center;
+  justify-content: center;
+  background-color: #f5f5f5;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: -1;
+  text-align: center;
+}
+
+.connection-title {
+  border: 1px solid red;
+  background-color: indianred;
+  color: white;
+  padding: 30px;
+  border-radius: 8px;
+}
+
 /*# sourceMappingURL=main.css.map */
