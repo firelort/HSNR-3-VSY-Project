@@ -83,7 +83,7 @@ $(function () {
     }
 
     function handleNoConnect2() {
-        // decide what to do when you can't connect to either
+        $('.connection-error')[0].style.zIndex = 9001;
     }
 
     function onConnect() {
