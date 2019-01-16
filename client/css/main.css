@@ -319,15 +319,13 @@ template
   left: 0;
   width: 100%;
   z-index: -1;
-  text-align: center;
-}
+  text-align: center; }
 
 .connection-title {
   border: 1px solid red;
   background-color: indianred;
   color: white;
   padding: 30px;
-  border-radius: 8px;
-}
+  border-radius: 8px; }
 
 /*# sourceMappingURL=main.css.map */
