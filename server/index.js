@@ -74,6 +74,11 @@ io.on('connection', function (socket) {
 
     });
 
+    socket.on('oldid', function(oldid, username){
+       console.log(oldid, username, socket.id);
+       gameserver.changeId(oldid, username,  socket);
+    });
+
     // Gegenspieler mitteilen welches Feld gespielt wurde
     // TODO für verschiedene Spiele anpassen
     socket.on('game move', function (data) {
@@ -163,6 +168,7 @@ io.on('connection', function (socket) {
         }
     });
 
+
 });
 
 
@@ -170,13 +176,13 @@ io.on('connection', function (socket) {
  * Starten des Servers
  */
 function startServer() {
-    var ports = [80,3000];
+    var ports = [80, 3000];
     var i = 0;
 
     http.on('error', function () {
         if (i < ports.length - 1) {
             i += 1;
-            console.log("Port " + ports[i-1] + " belegt, versuche " + ports[i] + ".");
+            console.log("Port " + ports[i - 1] + " belegt, versuche " + ports[i] + ".");
             http.listen(ports[i]);
             secondHost = true
         } else {

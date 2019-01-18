@@ -13,13 +13,16 @@ var chatw = class {
 const chat = new chatw();
 console.log(chat);
 
+var userid;
+var username;
 
 $(function () {
+
 
     function log(eventName, message) {
         if (typeof message == 'object')
             message = JSON.stringify(message);
-        var content = eventName + '>' + (message ? message : '');
+        let content = eventName + '>' + (message ? message : '');
         console.log(content);
     }
 
@@ -87,6 +90,13 @@ $(function () {
     }
 
     function onConnect() {
+
+        if (donethis) {
+            socket.emit('oldid', userid, username);
+        }
+        userid = socket.id;
+
+
         // set other event handlers on a connected socket
         socket.on('disconnect', function () {
 
@@ -184,6 +194,7 @@ $(function () {
     });
     $('#login').submit(function () {
         socket.emit('set username', $('#u').val());
+        username= $('#u').val();
         //$('#m').val('');
         return false;
     });
