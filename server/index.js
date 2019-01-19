@@ -95,25 +95,22 @@ io.on('connection', function (socket) {
     });
 
     // Spieler zu einem Spiel einladen
-    socket.on('invite player', function (data) {
+    socket.on('invite player', function (usernameSecond) {
 
-        console.log(data);
-        var username;
-
-        if (data === gameserver.getUsername(socket)) {
-            console.log("[EVENT-ERROR] " + username + ' hat sich selber eingeladen.');
+        if (usernameSecond === gameserver.getUsername(socket)) {
+            console.log('[EVENT-ERROR] ' + usernameSecond + ' hat sich selber eingeladen.');
 
             socket.emit('chat message', {
                 code: 401,
                 msg: "Du kannst dich nicht selbst einladen.",
                 type: 'event',
-                'error': true
+                error: true
             });
             return false;
         }
 
         // prüfen ob der Benutzer noch online ist
-        else if (!gameserver.isUser(data)) {
+        else if (!gameserver.isUser(usernameSecond)) {
             socket.emit('chat message', {
                 msg: "Der Benutzer existiert nicht oder ist offline.", //todo wer ist ihr?
                 type: 'event',
@@ -121,14 +118,31 @@ io.on('connection', function (socket) {
             });
         } else {
             // Spieler noch online, Einladung anzeigen
-            //console.log("[EVENT] " + data + ' wurde eingeladen von ' + username);
-            console.log("[EVENT] " + data + ' wurde eingeladen von ' + gameserver.getUsername(socket));
-            io.to(`${gameserver.getUser(data)}`).emit('chat message', {
-                msg: username + " lädt dich ein  ",
-                type: 'event',
+            console.log("[EVENT] " + usernameSecond + ' wurde eingeladen von ' + gameserver.getUsername(socket));
+            gameserver.createInvite(socket.id, usernameSecond);
+
+            io.to(`${gameserver.getUser(usernameSecond)}`).emit('invite', {
+                gametype: 2,
+                gamename: "BATTLESHIPS",
+                user: gameserver.getUsername(socket),
                 servertimestamp: Date.now()
             })
         }
+    });
+
+    // Spieler in einem Raum stecken
+    socket.on('join room', function (data) {
+        // Test if the invite is valid
+        console.log(data);
+        // Create a new Room and let the user join
+
+    });
+
+    socket.on('reject invite', function (data) {
+        // Test if the invite is valid
+
+        // Remove the invite from the list
+        console.log(data);
     });
 
 
@@ -160,7 +174,6 @@ io.on('connection', function (socket) {
             socket.broadcast.emit('chat message', data);
 
             gameserver.deleteUser(socket);
-
             // Benutzerliste updaten
             io.emit('user update', gameserver.getUsernames());
         } catch (e) {
