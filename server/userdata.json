@@ -1,5 +1,11 @@
 {
     "rooms": {},
-    "user": {},
-    "usernames": {}
+    "user": {
+        "uU00jw3SiO4Jv4L-AAAA": {
+            "name": "asdf"
+        }
+    },
+    "usernames": {
+        "asdf": "uU00jw3SiO4Jv4L-AAAA"
+    }
 }

@@ -108,7 +108,11 @@ $(function () {
                 if (msg.type == 'message') {
                     item.html("<b>" + msg.name + "</b>: " + msg.msg);
                 } else if (msg.type == 'event') {
-                    item.html("<i>" + msg.msg + "</i>");
+                    if (msg.error === true) {
+                        item.html("<span class='message-error'><i>" + msg.msg + "</i></span>");
+                    } else {
+                        item.html("<i>" + msg.msg + "</i>");
+                    }
                 }
 
                 $('#messages').append(item);
@@ -149,8 +153,9 @@ $(function () {
             $(".chat-rooms").html(userList.join(""));
 
 
+        }).on('invite received', function () {
+            
         });
-        ;
     }
 
 
@@ -216,6 +221,9 @@ $(function () {
         return false;
     });
 
+    $('#test').click(function () {
+        socket.emit('invite response');
+    });
 
     function timeoutFunction() {
         typing = false;

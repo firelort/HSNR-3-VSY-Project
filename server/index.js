@@ -11,6 +11,7 @@ app.use(express.static(clientPath));
 app.get('/', function (req, res) {
     res.sendFile(clientPath + 'index.html');
 });
+
 var donethis = false;
 
 io.on('connection', function (socket) {
@@ -29,6 +30,7 @@ io.on('connection', function (socket) {
         console.log("Hauptserver nicht mehr verfügbar");
         // TODO Daten vom ersten Server ziehen -> Ausfallsicherheit!
     }
+
 
     /**
      * Usernamen setzen für den Socket
@@ -74,9 +76,9 @@ io.on('connection', function (socket) {
 
     });
 
-    socket.on('oldid', function(oldid, username){
-       console.log(oldid, username, socket.id);
-       gameserver.changeId(oldid, username,  socket);
+    socket.on('oldid', function (oldid, username) {
+        console.log(oldid, username, socket.id);
+        gameserver.changeId(oldid, username, socket);
     });
 
     // Gegenspieler mitteilen welches Feld gespielt wurde
@@ -96,18 +98,16 @@ io.on('connection', function (socket) {
 
     // Spieler zu einem Spiel einladen
     socket.on('invite player', function (data) {
+        let usernameOfEmittingSocket = gameserver.getUsername(socket);
 
-        console.log(data);
-        var username;
-
-        if (data === gameserver.getUsername(socket)) {
-            console.log("[EVENT-ERROR] " + username + ' hat sich selber eingeladen.');
+        if (data === usernameOfEmittingSocket) {
+            console.log('[EVENT-ERROR] ' + usernameOfEmittingSocket + ' hat sich selber eingeladen.');
 
             socket.emit('chat message', {
-                code: 401,
-                msg: "Du kannst dich nicht selbst einladen.",
+                msg: 'Du kannst dich nicht selbst einladen',
                 type: 'event',
-                'error': true
+                error: true,
+                servertimestamp: Date.now()
             });
             return false;
         }
@@ -115,19 +115,52 @@ io.on('connection', function (socket) {
         // prüfen ob der Benutzer noch online ist
         else if (!gameserver.isUser(data)) {
             socket.emit('chat message', {
-                msg: "Der Benutzer existiert nicht oder ist offline.", //todo wer ist ihr?
+                msg: "Der Benutzer existiert nicht oder ist offline", //todo wer ist ihr?
                 type: 'event',
+                error: true,
                 servertimestamp: Date.now()
             });
         } else {
             // Spieler noch online, Einladung anzeigen
             //console.log("[EVENT] " + data + ' wurde eingeladen von ' + username);
-            console.log("[EVENT] " + data + ' wurde eingeladen von ' + gameserver.getUsername(socket));
+            console.log("[EVENT] " + data + ' wurde eingeladen von ' + usernameOfEmittingSocket);
             io.to(`${gameserver.getUser(data)}`).emit('chat message', {
-                msg: username + " lädt dich ein  ",
+                msg: usernameOfEmittingSocket + ' lädt dich ein',
                 type: 'event',
                 servertimestamp: Date.now()
             })
+        }
+    });
+
+    // Einladung akzeptieren
+
+    socket.on('join room', function (data) {
+
+        var room = io.nsps['/'].adapter.rooms[data.room];
+        if (data.type === 'accept') {
+            // Test if user is in an other room already
+            if (Object.values(socket.rooms).length < 2) {
+                // Ein neuer Raum wird erstellt
+                let socketPassiveId = socket.id; // Herausgeforderter
+                let socketActiveid = data.challengerid; // Herausforder
+                let socketActive = _.findWhere(io.sockets.sockets, {id: socketActiveId});
+                if(Object.values(socketActive.rooms).length < 2) {
+                    let roomName = socketPassiveId + "-" + socketActiveid;
+                    socket.join(roomName);
+                    socketActive.join(roomName);
+                    io.to(roomName).emit('chat message', {
+                        msg: 'Good Luck && Have fun',
+                        type: 'event',
+                        servertimestamp: Date.now()
+                    })
+                } else {
+                 // Herausforder ist bereits im Spiel
+                }
+            } else {
+                // Nutzer ist bereits in einem Spiel
+            }
+        } else {
+            // Einaldung abgelehnt
         }
     });
 

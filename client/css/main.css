@@ -328,4 +328,8 @@ template
   padding: 30px;
   border-radius: 8px; }
 
+.message-error {
+  color: red;
+}
+
 /*# sourceMappingURL=main.css.map */

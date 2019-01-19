@@ -6,6 +6,7 @@ class GameServer {
         this.user = {};
         this.usernames = {};
         this.rooms = {};
+        this.invite = {};
         this.GameTypes = {
             TICTACTOE: 1,
             BATTLESHIPS: 2
@@ -54,12 +55,44 @@ class GameServer {
 
     changeId(oldId, username, newSocket) {
         this.usernames[username] = newSocket.id; // rebind username
-        this.user[newSocket.id] = {"name": username} // rebind user socket
+        this.user[newSocket.id] = {"name": username}; // rebind user socket
         console.log("old", oldId);
         console.log("bound to", this.user[newSocket.id]);
         this.saveData();
     }
 
+    createRoom() {
+
+    }
+
+    createInvite(firstPlayerSocket, secondPlayerUsername) {
+        let secondSocket = this.getUser(secondPlayerUsername);
+        if (secondSocket !== firstPlayerSocket.id) {
+            if (this.invite[secondSocket] === undefined) {
+                this.invite[secondSocket] = [firstPlayerSocket.id]
+            } else {
+                this.invite[secondSocket].push(firstPlayerSocket.id);
+            }
+
+        }
+    }
+
+    cancelInvite(firstPlayerSocket, asdf) {
+        
+    }
+    
+    updateInviteOldId(oldId, newId) {
+        this.invite[newId] = this.invite[oldId];
+        // Updaten der ID auch in den versendeten Einladungen
+    }
+    
+    updateInvite(firstPlayerSocket, secondPlayerUsername) {
+
+    }
+
+    deleteInvites(socketid) {
+        delete this.invite[socketid]
+    }
 
 }
 
