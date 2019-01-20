@@ -47,7 +47,7 @@ class GameServer {
     saveData() {
 
         let gamedata = {rooms: this.rooms, user: this.user, usernames: this.usernames, invites: this.invites};
-
+        console.log(gamedata);
         fs.writeFile("userdata.json", JSON.stringify(gamedata, null, 4), 'utf8', (err) => {
             if (err) throw err;
             console.log('The file has been saved!');
@@ -81,7 +81,7 @@ class GameServer {
         let socketIdSecond = this.getUser(usernameSecond);
 
         if (this.invites[socketIdSecond].includes(socketIdFirst)) {
-            this.invites[socketIdSecond].splice($.inArray(socketIdFirst, this.invites[socketIdSecond]), 1);
+            this.invites[socketIdSecond].splice(this.invites[socketIdSecond].indexOf(socketIdFirst), 1);
         }
 
         this.saveData()
@@ -111,9 +111,57 @@ class GameServer {
                 this.invites[key].splice(this.invites[key].indexOf(id), 1);
             }
         }
+
+        this.saveData();
     }
 
+    isValidInvite(usernameFirst, socketIdSecond) {
+        return this.invites[socketIdSecond].includes(this.getUser(usernameFirst));
+    }
 
+    createRoom(usernameFirst, socketIdSecond, gameType) {
+        let socketIdFirst = this.getUser(usernameFirst);
+
+        let roomname = gameType + "::" + socketIdFirst + "::" + socketIdSecond;
+
+        this.rooms[roomname] = {
+            gametype: gameType,
+            firstplayer: socketIdFirst,
+            secondplayer: socketIdSecond
+        };
+
+        this.saveData();
+
+        return roomname
+    }
+
+    isAlreadyInARoom(socketid) {
+        let rooms = Object.keys(this.rooms);
+        let entry;
+        for (let index = 0; index < rooms.length; index++) {
+            entry = rooms[index];
+            if (entry.includes(socketid)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    disbandRoom(socketid) {
+        let rooms = Object.keys(this.rooms);
+        let entry;
+        for (let index = 0; index < rooms.length; index++) {
+            entry = rooms[index];
+            if (entry.includes(socketid)) {
+                let data = this.rooms[entry];
+                delete this.rooms[entry];
+                data.roomname = entry;
+                return data;
+            }
+        }
+
+        this.saveData();
+    }
 }
 
 module.exports = new GameServer();

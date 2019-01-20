@@ -74,9 +74,9 @@ io.on('connection', function (socket) {
 
     });
 
-    socket.on('oldid', function(oldid, username){
-       console.log(oldid, username, socket.id);
-       gameserver.changeId(oldid, username,  socket);
+    socket.on('oldid', function (oldid, username) {
+        console.log(oldid, username, socket.id);
+        gameserver.changeId(oldid, username, socket);
     });
 
     // Gegenspieler mitteilen welches Feld gespielt wurde
@@ -96,6 +96,7 @@ io.on('connection', function (socket) {
 
     // Spieler zu einem Spiel einladen
     socket.on('invite player', function (usernameSecond) {
+        usernameSecond = usernameSecond.toString();
 
         if (usernameSecond === gameserver.getUsername(socket)) {
             console.log('[EVENT-ERROR] ' + usernameSecond + ' hat sich selber eingeladen.');
@@ -104,6 +105,7 @@ io.on('connection', function (socket) {
                 code: 401,
                 msg: "Du kannst dich nicht selbst einladen.",
                 type: 'event',
+                servertimestamp: Date.now(),
                 error: true
             });
             return false;
@@ -132,17 +134,64 @@ io.on('connection', function (socket) {
 
     // Spieler in einem Raum stecken
     socket.on('join room', function (data) {
-        // Test if the invite is valid
-        console.log(data);
-        // Create a new Room and let the user join
+        // Test if player one is in an room already
+        if (gameserver.isAlreadyInARoom(gameserver.getUser(data.user))) {
+            socket.emit('chat message', {
+                msg: "Dein Gegner ist bereits in einem Spiel",
+                type: 'event',
+                servertimestamp: Date.now(),
+                error: true
+            });
+            return;
+        }
 
+        // Test if player two is in an room already
+        if (gameserver.isAlreadyInARoom(socket.id)) {
+            socket.emit('chat message', {
+                msg: "Du bist bereits in einem Spiel und kannst deshalb die Einladung nicht annehmen",
+                type: 'event',
+                servertimestamp: Date.now(),
+                error: true
+            });
+            return;
+        }
+
+        // Test if the invite is valid
+        if (!gameserver.isValidInvite(data.user, socket.id)) {
+            return;
+        }
+
+
+        // Create a new Room and let the user join
+        let roomname = gameserver.createRoom(data.user, socket.id, data.gametype);
+        io.sockets.sockets[gameserver.getUser(data.user)].join(roomname); // Player 1 joins the room
+        socket.join(roomname); // Player 2 joins the room
+        io.to(roomname).emit('chat message', {
+            type: "message",
+            msg: "Good Luck && Have fun",
+            serversimestamp: Date.now(),
+            name: "Server"
+        });
+
+        //todo: maybe let the sockets save the room name
+
+        // Delete both sockets from the invite obj.
+        gameserver.deleteInvitesFromSocketId(gameserver.getUser(data.user));
+        gameserver.deleteInvitesFromSocketId(socket.id);
     });
 
     socket.on('reject invite', function (data) {
         // Test if the invite is valid
+        if (gameserver.isValidInvite(data.user, socket.id)) {
+            // Remove the invite from the list
+            gameserver.cancelInvite(gameserver.getUser(data.user), gameserver.getUsername(socket));
 
-        // Remove the invite from the list
-        console.log(data);
+            socket.emit('chat message', {
+                msg: "Die Einladung wurde abgelehnt.",
+                type: 'event',
+                servertimestamp: Date.now(),
+            });
+        }
     });
 
 
@@ -173,7 +222,27 @@ io.on('connection', function (socket) {
             };
             socket.broadcast.emit('chat message', data);
 
+            let roomData = gameserver.disbandRoom(socket.id);
+
+            // Notify the other user
+            let notifySocket;
+            if (roomData.firstplayer === socket.id) {
+                notifySocket = roomData.secondplayer;
+            } else {
+                notifySocket = roomData.firstplayer;
+            }
+            io.to(`${notifySocket}`).emit('chat message', {
+                msg: "Dein Gegenspieler hat den Raum verlassen",
+                type: 'event',
+                servertimestamp: Date.now()
+            });
+            console.log();
+
+            //Let the other player leave the room
+            io.sockets.sockets[notifySocket].leave(roomData.roomname);
+
             gameserver.deleteUser(socket);
+
             // Benutzerliste updaten
             io.emit('user update', gameserver.getUsernames());
         } catch (e) {

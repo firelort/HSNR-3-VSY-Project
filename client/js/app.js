@@ -92,7 +92,7 @@ $(function () {
     function onConnect() {
 
         if (donethis) {
-            socket.emit('oldid', userid, username); //todo warum ist oldid''
+            socket.emit('oldid', userid, username);
         }
         userid = socket.id;
 
