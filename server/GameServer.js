@@ -54,12 +54,23 @@ class GameServer {
         });
     }
 
+    readData() {
+        let data = fs.readFileSync("userdata.json");
+        data = JSON.parse(data);
+        this.invites = data.invites;
+        this.rooms = data.rooms;
+        this.usernames = data.usernames;
+        this.user = data.user;
+
+
+        // console.log(this);
+    }
+
     changeId(oldId, username, newSocket) {
         this.usernames[username] = newSocket.id; // rebind username
         this.user[newSocket.id] = {"name": username}; // rebind user socket
         this.updateInviteId(oldId, newSocket.id); // Updaten der Einladung
-        console.log("old", oldId);
-        console.log("bound to", this.user[newSocket.id]);
+        this.deleteUser({id: oldId});
         this.saveData();
     }
 
@@ -89,9 +100,14 @@ class GameServer {
 
     updateInviteId(oldid, newid) {
         // Updaten der erhalten Einladungen
-        this.invites[newid] = oldid;
-        delete this.invites[oldid];
+        if (oldid in this.invites) {
+            this.invites[newid] = this.invites[oldid];
+            delete this.invites[oldid];
 
+
+
+
+        }
         // Updaten der versendeten Einladungen
         for (let key in this.invites) {
             if (this.invites[key].includes(oldid)) {

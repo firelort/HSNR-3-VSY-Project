@@ -28,6 +28,7 @@ io.on('connection', function (socket) {
         donethis = true;
         console.log("Hauptserver nicht mehr verfügbar");
         // TODO Daten vom ersten Server ziehen -> Ausfallsicherheit!
+        gameserver.readData();
     }
 
     /**
