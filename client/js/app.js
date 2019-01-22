@@ -149,8 +149,13 @@ $(function () {
             $(".chat-rooms").html(userList.join(""));
 
 
+        }).on('invite', function (data) {
+            $('div.invite-box p.invite-message').html("<b>" + data.user + "</b> lädt dich zu <b>" + data.gamename + "</b> ein.");
+            $('div.invite-box div.buttons button.btn-green').data('gametype', data.gametype);
+            $('div.invite-box div.buttons button.btn-green').data('user', data.user);
+            $('div.invite-box div.buttons button.btn-red').data('user', data.user);
+            $('div.invite-box')[0].style.zIndex = 100;
         });
-        ;
     }
 
 
@@ -194,7 +199,7 @@ $(function () {
     });
     $('#login').submit(function () {
         socket.emit('set username', $('#u').val());
-        username= $('#u').val();
+        username = $('#u').val();
         //$('#m').val('');
         return false;
     });
@@ -227,6 +232,28 @@ $(function () {
         socket.emit('typing', 'typing...');
         clearTimeout(typingTimeout);
         typingTimeout = setTimeout(timeoutFunction, 500);
+    });
+
+    function closeInvite() {
+        $('div.invite-box p.invite-message').html("");
+        $('div.invite-box div.buttons button.btn-green').removeData('gametype');
+        $('div.invite-box div.buttons button.btn-green').removeData('user');
+        $('div.invite-box div.buttons button.btn-red').removeData('user');
+        $('div.invite-box').removeAttr('style');
+    }
+
+    // Hinzufügen von Eventlistener für die Invite Buttons
+    $('div.invite-box div.buttons button.btn-green').click(function () {
+        socket.emit('join room', {
+            gametype: $('div.invite-box div.buttons button.btn-green').data('gametype'),
+            user: $('div.invite-box div.buttons button.btn-green').data('user')
+        });
+        closeInvite();
+    });
+
+    $('div.invite-box div.buttons button.btn-red').click(function () {
+        socket.emit('reject invite', {user: $('div.invite-box div.buttons button.btn-red').data('user')});
+        closeInvite();
     });
 
 });
