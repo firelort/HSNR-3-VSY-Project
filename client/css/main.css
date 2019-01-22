@@ -328,8 +328,57 @@ template
   padding: 30px;
   border-radius: 8px; }
 
-.message-error {
-  color: red;
+div.invite-box {
+  position: fixed;
+  margin-top: 100px;
+  margin-left: 50%;
+  transform: translate(-50%, 0);
+
+  background: white;
+  border-radius: 20px;
+  padding: 20px 40px;
+
+  box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+  text-align: center;
+
+  z-index: -1; /*z-index: 100;*/
 }
+
+div.invite-box > p.invite-message {
+  margin: 10px;
+}
+
+div.invite-box > div.buttons {
+  margin-top: 20px;
+}
+
+div.invite-box button.btn-red, div.invite-box button.btn-green {
+  background-color: white;
+  color: black;
+  font-size: 18px;
+  margin: 0 20px;
+  padding: 10px 24px;
+  cursor: pointer;
+  text-align: center;
+}
+
+div.invite-box button.btn-red {
+  border: 2px solid #f44336;
+}
+
+div.invite-box button.btn-green {
+  border: 2px solid #4CAF50;
+}
+
+div.invite-box button.btn-red:active {
+  background-color: #f44336;
+  color: white;
+}
+
+div.invite-box button.btn-green:active {
+  background-color: #4CAF50;
+  color: white;
+}
+
 
 /*# sourceMappingURL=main.css.map */
