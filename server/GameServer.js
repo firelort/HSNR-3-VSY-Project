@@ -47,7 +47,6 @@ class GameServer {
     saveData() {
 
         let gamedata = {rooms: this.rooms, user: this.user, usernames: this.usernames, invites: this.invites};
-        console.log(gamedata);
         fs.writeFileSync("userdata.json", JSON.stringify(gamedata, null, 4), 'utf8');
     }
 
