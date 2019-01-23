@@ -139,10 +139,23 @@ $(function () {
             }
         }).on('user update', function (usernames) {
 
+            let battleshipCounter = 0;
+            let ticTacToeCounter = 0;
             var userList = [];
 
             $.each(usernames, function (k, entry) {
-                userList.push("<li><a class='player-link' href='#'>" + k + "</a></li>");
+                if (k.startsWith("l")) {  //Lobby
+                    userList.push("<li class='room-title'>Lobby</li>");
+                } else if (k.startsWith("1")) { // tictactoe
+                    userList.push("<li class='room-title'>TicTacToe " + ++ticTacToeCounter + "</li>");
+                } else if (k.startsWith("2")) { // battleships
+                    userList.push("<li class='room-title'>Battleships " + ++battleshipCounter + "</li>");
+                }
+
+                $.each(entry, function (k, entry) {
+                    userList.push("<li><a class='player-link' href='#'>" + entry.name + "</a></li>");
+                });
+
 
             });
 
@@ -168,6 +181,7 @@ $(function () {
         $('.contextmenu').hide();
         $('.contextmenu-background').hide();
         $('.contextmenu .options').html('');
+        $('.sidebar-menu .active').removeClass('active');
     }
 
     $(document).on('contextmenu', '.player-link', function (e) {
@@ -185,7 +199,7 @@ $(function () {
 
 
         var opt = $('.contextmenu .options');
-        cm.css("top", etop + $(this).height());
+        cm.css("top", etop + $(this).height() + 5);
         opt.append(template);
     }).on('click', '.contextmenu-background', function (e) {
 
