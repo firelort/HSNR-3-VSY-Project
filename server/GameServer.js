@@ -26,7 +26,7 @@ class GameServer {
     }
 
     getUsername(socket) {
-        return this.user[socket.id].name;
+        return (this.user[socket.id]) ? this.user[socket.id].name : false ;
     }
 
     getUser(name) {
@@ -42,6 +42,10 @@ class GameServer {
 
     getUsernames() {
         return this.usernames;
+    }
+
+    getUsers() {
+        return this.user;
     }
 
     saveData() {
@@ -101,8 +105,6 @@ class GameServer {
             delete this.invites[oldid];
 
 
-
-
         }
         // Updaten der versendeten Einladungen
         for (let key in this.invites) {
@@ -110,6 +112,23 @@ class GameServer {
                 this.invites[key][this.invites[key].indexOf(oldid)] = newid;
             }
         }
+
+    }
+
+    getUsersInRooms() {
+
+        let rooms = {"lobby": []};
+        for (let key in this.user) {
+            if (this.user[key].room) {
+                if (!rooms.hasOwnProperty(this.user[key].room))
+                    rooms[this.user[key].room] = [];
+                rooms[this.user[key].room].push(this.user[key]);
+            } else {
+                rooms.lobby.push(this.user[key]);
+            }
+        }
+
+        return rooms;
 
     }
 
@@ -131,16 +150,26 @@ class GameServer {
         return this.invites[socketIdSecond].includes(this.getUser(usernameFirst));
     }
 
+    addGame(roomname, game){
+        this.rooms[roomname].game = game;
+        this.saveData();
+    }
+
     createRoom(usernameFirst, socketIdSecond, gameType) {
         let socketIdFirst = this.getUser(usernameFirst);
 
         let roomname = gameType + "::" + socketIdFirst + "::" + socketIdSecond;
+
+
 
         this.rooms[roomname] = {
             gametype: gameType,
             firstplayer: socketIdFirst,
             secondplayer: socketIdSecond
         };
+
+        this.user[socketIdFirst].room = roomname;
+        this.user[socketIdSecond].room = roomname;
 
         this.saveData();
 
@@ -160,6 +189,7 @@ class GameServer {
     }
 
     disbandRoom(socketid) {
+        delete this.user[socketid].room;
         let rooms = Object.keys(this.rooms);
         let entry;
         for (let index = 0; index < rooms.length; index++) {
