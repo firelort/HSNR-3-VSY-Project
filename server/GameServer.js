@@ -150,10 +150,17 @@ class GameServer {
         return this.invites[socketIdSecond].includes(this.getUser(usernameFirst));
     }
 
+    addGame(roomname, game){
+        this.rooms[roomname].game = game;
+        this.saveData();
+    }
+
     createRoom(usernameFirst, socketIdSecond, gameType) {
         let socketIdFirst = this.getUser(usernameFirst);
 
         let roomname = gameType + "::" + socketIdFirst + "::" + socketIdSecond;
+
+
 
         this.rooms[roomname] = {
             gametype: gameType,

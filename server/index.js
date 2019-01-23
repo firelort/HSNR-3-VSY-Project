@@ -5,6 +5,9 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var secondHost = false;
 var gameserver = require("./GameServer.js");
+var games = require("./Games.js");
+
+
 
 const clientPath = path.resolve(path.dirname(require.main.filename) + '/../client/');
 app.use(express.static(clientPath));
@@ -161,10 +164,16 @@ io.on('connection', function (socket) {
         if (!gameserver.isValidInvite(data.user, socket.id)) {
             return;
         }
-
-
         // Create a new Room and let the user join
         let roomname = gameserver.createRoom(data.user, socket.id, data.gametype);
+        let game;
+        if(data.gametype == 2){
+            game = new games.Battleships(gameserver.getUser(data.user), socket.id);
+        } else if(data.gametype == 1){
+            game = new games.TicTacToe(gameserver.getUser(data.user), socket.id);
+        }
+
+        gameserver.addGame(roomname, game);
         io.sockets.sockets[gameserver.getUser(data.user)].join(roomname); // Player 1 joins the room
         socket.join(roomname); // Player 2 joins the room
         io.to(roomname).emit('chat message', {
