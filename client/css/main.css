@@ -170,6 +170,7 @@ template
   z-index: 1000; }
 
 .sidebar-right {
+  width: 600px;
   right: 0; }
 
 .sidebar-inner {
@@ -217,7 +218,7 @@ template
 .page-container {
   min-height: 100vh;
   padding-left: 280px;
-  padding-right: 280px;
+  padding-right: 600px;
   -webkit-transition: all .2s ease;
   -o-transition: all .2s ease;
   transition: all .2s ease; }
@@ -338,15 +339,14 @@ template
 .invite-box {
   position: fixed;
   margin-top: 100px;
-  margin-left: 50%;
+  left: calc(50% - 140px);
   transform: translate(-50%, 0);
   background: white;
   border-radius: 20px;
   padding: 20px 40px;
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
   text-align: center;
-  z-index: -1;
-  /*z-index: 100;*/ }
+  z-index: -1; }
   .invite-box .invite-message {
     margin: 10px; }
   .invite-box .buttons {
