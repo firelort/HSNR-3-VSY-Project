@@ -184,7 +184,7 @@ $(function () {
         $('.sidebar-menu .active').removeClass('active');
     }
 
-    $(document).on('contextmenu', '.player-link', function (e) {
+    $(document).on('contextmenu click', '.player-link', function (e) {
 
 
         e.preventDefault();
@@ -201,16 +201,15 @@ $(function () {
         var opt = $('.contextmenu .options');
         cm.css("top", etop + $(this).height() + 5);
         opt.append(template);
-    }).on('click', '.contextmenu-background', function (e) {
+    }).on('click', '.contextmenu-background', closeContextmenu)
+        .on('click', '.player-invite', function (e) {
+            e.preventDefault();
+            socket.emit('invite player', $(this).data('player'));
+            closeContextmenu();
 
-        closeContextmenu();
+        });
 
-    }).on('click', '.player-invite', function (e) {
-        e.preventDefault();
-        socket.emit('invite player', $(this).data('player'));
-        closeContextmenu();
 
-    });
     $('#login').submit(function () {
         socket.emit('set username', $('#u').val());
         username = $('#u').val();
@@ -224,7 +223,11 @@ $(function () {
         let row = this.rowIndex;
         let column = e.target.cellIndex;
         if ((row) >= 1 && (row) <= 10 && column >= 1 && column <= 10) {
-            positionShip({row: row, column: column});
+            // decrease coordinates by 1 to match array counting
+            socket.emit('battleships game move', {row: --row, column: --column}, function () {
+
+            });
+            //positionShip({row: row, column: column});
         }
 
     });
@@ -247,6 +250,7 @@ $(function () {
         clearTimeout(typingTimeout);
         typingTimeout = setTimeout(timeoutFunction, 500);
     });
+
 
     function closeInvite() {
         $('div.invite-box p.invite-message').html("");

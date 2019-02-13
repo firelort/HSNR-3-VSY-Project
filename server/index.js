@@ -7,7 +7,9 @@ var secondHost = false;
 var gameserver = require("./GameServer.js");
 var games = require("./Games.js");
 
-
+function log(data) {
+    console.log(require('util').inspect(data, true, 10));
+}
 
 const clientPath = path.resolve(path.dirname(require.main.filename) + '/../client/');
 app.use(express.static(clientPath));
@@ -88,6 +90,9 @@ io.on('connection', function (socket) {
     socket.on('game move', function (data) {
         console.log("[EVENT] " + gameserver.getUsername(socket) + " machte move:  " + data.row + ":" + data.column)
 
+        log(gameserver.getRoomByUser(socket.id));
+
+
         socket.broadcast.emit('accepted game move', {
             msg: gameserver.getUsername(socket) + " machte move:  " + data.row + ":" + data.column,
             type: 'event',
@@ -96,6 +101,15 @@ io.on('connection', function (socket) {
         });
 
 
+    });
+
+    socket.on('battleships game move', function (coordinates, callback) {
+        console.log("[EVENT] " + gameserver.getUsername(socket) + " machte move:  " + coordinates.row + ":" + coordinates.column)
+
+        //log(gameserver.getRoomByUser(socket.id));
+        let game = gameserver.getRoomByUser(socket.id).game;
+        console.log(game.positionShip(coordinates, socket.id));
+        console.log(game.player1Field, game.player2Field);
     });
 
     // Spieler zu einem Spiel einladen
@@ -167,9 +181,9 @@ io.on('connection', function (socket) {
         // Create a new Room and let the user join
         let roomname = gameserver.createRoom(data.user, socket.id, data.gametype);
         let game;
-        if(data.gametype == 2){
+        if (data.gametype == 2) {
             game = new games.Battleships(gameserver.getUser(data.user), socket.id);
-        } else if(data.gametype == 1){
+        } else if (data.gametype == 1) {
             game = new games.TicTacToe(gameserver.getUser(data.user), socket.id);
         }
 
@@ -297,5 +311,4 @@ function startServer() {
     });
 }
 
-console.clear();
 startServer();
