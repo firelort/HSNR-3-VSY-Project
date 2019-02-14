@@ -1,6 +1,7 @@
 var hasStartPosition;
 var startPosition;
 
+/*fertig*/
 function isPathAvailable(start, end) {
 
     let isFree = true;
@@ -23,6 +24,7 @@ function isPathAvailable(start, end) {
     return isFree;
 }
 
+/*fertig*/
 function touchesShip(coordinates) {
     let rows = $('.game-player-container .player-field tr');
     return rows.eq(coordinates.row - 1).find('td').eq(coordinates.column).hasClass("active") // top
@@ -32,6 +34,7 @@ function touchesShip(coordinates) {
 }
 
 
+/*fertig*/
 function setPathActive(start, end) {
 
     let startRow, startColumn, endRow, endColumn;
@@ -52,6 +55,7 @@ function setPathActive(start, end) {
 
 }
 
+/*fertig*/
 function getShipLength(start, end) {
     if ((start.row === end.row && start.column !== end.column))
         return Math.abs(start.column - end.column) + 1;
@@ -75,6 +79,7 @@ function reduceShipCounter(length) {
 
 }
 
+/*feritg */
 function isInLine(start, end) {
     return (start.row === end.row && start.column !== end.column) || (start.column === end.column && start.row !== end.row)
 

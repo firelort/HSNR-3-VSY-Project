@@ -26,7 +26,7 @@ class GameServer {
     }
 
     getUsername(socket) {
-        return (this.user[socket.id]) ? this.user[socket.id].name : false ;
+        return (this.user[socket.id]) ? this.user[socket.id].name : false;
     }
 
     getUser(name) {
@@ -150,16 +150,19 @@ class GameServer {
         return this.invites[socketIdSecond].includes(this.getUser(usernameFirst));
     }
 
-    addGame(roomname, game){
+    addGame(roomname, game) {
         this.rooms[roomname].game = game;
         this.saveData();
+    }
+
+    getRoomByUser(socketId) {
+        return (this.user[socketId].room) ? this.rooms[this.user[socketId].room] : false;
     }
 
     createRoom(usernameFirst, socketIdSecond, gameType) {
         let socketIdFirst = this.getUser(usernameFirst);
 
         let roomname = gameType + "::" + socketIdFirst + "::" + socketIdSecond;
-
 
 
         this.rooms[roomname] = {
