@@ -236,6 +236,8 @@ $(function () {
                         moveResult.end.row++;
                         moveResult.end.column++;
                         setPathActive(moveResult.start, moveResult.end);
+                        reduceShipCounter(moveResult.reduceCounter);
+                        placeShipImage(moveResult.start, moveResult.end, moveResult.reduceCounter);
                         break;
                     case 3: // Field selected
                         //increase by one because field descriptions are in [0]

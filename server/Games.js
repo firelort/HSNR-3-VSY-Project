@@ -37,6 +37,22 @@ class Battleships extends Game {
         this.player1Field = [...Array(10)].map(x => Array(10).fill(Battleships.FieldType.EMPTY));
         this.player2Field = [...Array(10)].map(x => Array(10).fill(Battleships.FieldType.EMPTY));
 
+
+        // length: amount
+        this.player1Ships = {
+            5: 1,
+            4: 2,
+            3: 3,
+            2: 4
+        };
+
+        this.player2Ships = {
+            5: 1,
+            4: 2,
+            3: 3,
+            2: 4
+        };
+
         this.player1Field[0][0] = Battleships.FieldType.SHIP_UNDAMAGED;
         this.player1Field[0][1] = Battleships.FieldType.SHIP_UNDAMAGED;
         this.player1Field[0][2] = Battleships.FieldType.SHIP_UNDAMAGED;
@@ -79,6 +95,11 @@ class Battleships extends Game {
         return obfuscatedField;
 
 
+    }
+
+    _isLengthAvailable(length, playerId) {
+        let ships = (playerId == this.player1) ? this.player1Ships : this.player2Ships;
+        return ships[length] > 0;
     }
 
     _touchesShip(coordinates, playerId) {
@@ -148,6 +169,11 @@ class Battleships extends Game {
 
     }
 
+    _reduceShipCounter(length, playerId) {
+        let ships = (playerId == this.player1) ? this.player1Ships : this.player2Ships;
+        ships[length]--;
+    }
+
     positionShip(position, playerId) {
 
 
@@ -177,24 +203,21 @@ class Battleships extends Game {
                 //let startCell = $('.game-player-container .player-field tr').eq(startPosition.row).find('td').eq(startPosition.column);
                 if (this._isInLine(startPosition, position)) {
 
-                    // if (isLengthAvailable(getShipLength(startPosition, position))) {
-                    if (this._isPathAvailable(startPosition, position, field)) {
+                    let shipLength = this._getShipLength(startPosition, position);
+                    if (this._isLengthAvailable(shipLength, playerId)) {
+                        if (this._isPathAvailable(startPosition, position, field)) {
 
-                        //console.log(reduceShipCounter(getShipLength(startPosition, position)));
-                        this._setPathActive(startPosition, position, field);
-                        return {start: startPosition, end: position, type: Battleships.FieldType.SHIP_UNDAMAGED};
+                            console.log(this._reduceShipCounter(shipLength, playerId));
+                            this._setPathActive(startPosition, position, field);
+                            return {start: startPosition, end: position, type: Battleships.FieldType.SHIP_UNDAMAGED, reduceCounter: shipLength};
 
+                        } else {
+                            return "Zwischen den Koordinaten befinden sich Felder die nicht besetzt werden können.";
+                        }
                     } else {
-                        return "Zwischen den Koordinaten befinden sich Felder die nicht besetzt werden können.";
+                        //length not available oy
+                        return "Du hast kein Schiff in dieser Länge.";
                     }
-                    // } else {
-                    //     //length not available oy
-                    //     $('.player-field .highlighted').removeClass('highlighted');
-                    //     let item = $('<li>');
-                    //     item.addClass('message');
-                    //     item.html("<i>Game: Du hast kein Schiff in dieser Länge</i>");
-                    //     $('#messages').append(item);
-                    // }
                 }
             }
 
