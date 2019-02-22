@@ -108,8 +108,16 @@ io.on('connection', function (socket) {
 
         //log(gameserver.getRoomByUser(socket.id));
         let game = gameserver.getRoomByUser(socket.id).game;
+        if(game !== undefined){
         console.log(game.positionShip(coordinates, socket.id));
         console.log(game.player1Field, game.player2Field);
+        } else {
+            socket.emit('chat message', {
+                msg: "Das Spiel hat noch nicht angefangen",
+                type: 'event',
+                servertimestamp: Date.now()
+            });
+        }
     });
 
     // Spieler zu einem Spiel einladen
