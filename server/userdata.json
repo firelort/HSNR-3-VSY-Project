@@ -1,26 +1,16 @@
 {
-    "rooms": {
-        "2::duNEwy9aovWo2jZKAAAC::udhSTOYVZcQlQlAfAAAD": {
-            "gametype": 2,
-            "firstplayer": "duNEwy9aovWo2jZKAAAC",
-            "secondplayer": "udhSTOYVZcQlQlAfAAAD"
-        }
-    },
+    "rooms": {},
     "user": {
-        "udhSTOYVZcQlQlAfAAAD": {
-            "name": "aasd"
+        "W7je6fJ0EpP1jeM2AAAC": {
+            "name": "b"
         },
-        "duNEwy9aovWo2jZKAAAC": {
-            "name": "as"
+        "aCiOMfE_hSc-WTPbAAAD": {
+            "name": "d"
         }
     },
     "usernames": {
-        "aasd": "udhSTOYVZcQlQlAfAAAD",
-        "as": "duNEwy9aovWo2jZKAAAC"
+        "b": "W7je6fJ0EpP1jeM2AAAC",
+        "d": "aCiOMfE_hSc-WTPbAAAD"
     },
     "invites": {}
-}      "udhSTOYVZcQlQlAfAAAD": [
-            "duNEwy9aovWo2jZKAAAC"
-        ]
-    }
 }
