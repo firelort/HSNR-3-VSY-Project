@@ -153,7 +153,8 @@ $(function () {
                 }
 
                 $.each(entry, function (k, entry) {
-                    userList.push("<li><a class='player-link' href='#'>" + entry.name + "</a></li>");
+                    let highlighted = (entry.name === username) ? ' highlighted' : '';
+                    userList.push("<li><a class='player-link" + highlighted + "' href='#'>" + entry.name + "</a></li>");
                 });
 
 
