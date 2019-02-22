@@ -172,6 +172,7 @@ class Battleships extends Game {
             }
             if (!hasStartPosition) {
                 field[position.row][position.column] = Battleships.FieldType.SELECTED;
+                return {...position, type: Battleships.FieldType.SELECTED};
             } else {
                 //let startCell = $('.game-player-container .player-field tr').eq(startPosition.row).find('td').eq(startPosition.column);
                 if (this._isInLine(startPosition, position)) {
@@ -181,6 +182,7 @@ class Battleships extends Game {
 
                         //console.log(reduceShipCounter(getShipLength(startPosition, position)));
                         this._setPathActive(startPosition, position, field);
+                        return {start: startPosition, end: position, type: Battleships.FieldType.SHIP_UNDAMAGED};
 
                     } else {
                         return "Zwischen den Koordinaten befinden sich Felder die nicht besetzt werden können.";

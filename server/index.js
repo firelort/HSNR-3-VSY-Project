@@ -109,8 +109,24 @@ io.on('connection', function (socket) {
         //log(gameserver.getRoomByUser(socket.id));
         let game = gameserver.getRoomByUser(socket.id).game;
         if(game !== undefined){
-        console.log(game.positionShip(coordinates, socket.id));
+        //console.log(game.positionShip(coordinates, socket.id));
+            let moveResult = game.positionShip(coordinates, socket.id);
+
+            if(typeof moveResult === 'string'){
+                socket.emit('chat message', {
+                    msg: moveResult,
+                    type: 'event',
+                    servertimestamp: Date.now()
+                });
+            } else if(typeof moveResult === 'object'){
+                callback(moveResult);
+            } else {
+                console.log("[ERROR] battleships game move gab kein gültiges ergebnis ");
+            }
         console.log(game.player1Field, game.player2Field);
+
+
+
         } else {
             socket.emit('chat message', {
                 msg: "Das Spiel hat noch nicht angefangen",

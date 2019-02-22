@@ -224,8 +224,24 @@ $(function () {
         let column = e.target.cellIndex;
         if ((row) >= 1 && (row) <= 10 && column >= 1 && column <= 10) {
             // decrease coordinates by 1 to match array counting
-            socket.emit('battleships game move', {row: --row, column: --column}, function () {
+            socket.emit('battleships game move', {row: --row, column: --column}, function (moveResult) {
 
+                console.log(moveResult);
+                switch (moveResult.type) {
+                    case 1: // select path (position ship)
+                        //increase by one because field descriptions are in [0]
+                        // thats ugly, need better solution
+                        moveResult.start.row++;
+                        moveResult.start.column++;
+                        moveResult.end.row++;
+                        moveResult.end.column++;
+                        setPathActive(moveResult.start, moveResult.end);
+                        break;
+                    case 3: // Field selected
+                        //increase by one because field descriptions are in [0]
+                        selectField({row: ++moveResult.row, column: ++moveResult.column});
+                        break;
+                }
             });
             //positionShip({row: row, column: column});
         }
@@ -237,6 +253,18 @@ $(function () {
         $('#m').val('');
         return false;
     });
+
+    function selectField(coordinates, removeOtherSelections = true) {
+        if (removeOtherSelections) {
+            $('.highlighted').removeClass('highlighted')
+        }
+
+        let field = $('.game-player-container .player-field')[0]; // get player field
+        let cell = field.rows[coordinates.row].cells[coordinates.column]; // get cell
+        let $cell = $(cell); // cast to jquery object
+        $cell.addClass('highlighted');
+
+    }
 
 
     function timeoutFunction() {
