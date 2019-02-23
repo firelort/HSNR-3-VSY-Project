@@ -155,6 +155,10 @@ class GameServer {
         this.saveData();
     }
 
+    getGame(roomname){
+        return this.rooms[roomname].game;
+    }
+
     getRoomByUser(socketId) {
         return (this.user[socketId].room) ? this.rooms[this.user[socketId].room] : false;
     }

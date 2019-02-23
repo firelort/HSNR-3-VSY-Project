@@ -11,6 +11,116 @@ function log(data) {
     console.log(require('util').inspect(data, true, 10));
 }
 
+class Chat {
+
+    /**
+     * Setzt Socket.io Instanz als Member zur Verwaltung der Nachrichten
+     * @param io Socket.io Instanz
+     */
+    constructor(io) {
+        this.io = io;
+
+    }
+
+    /**
+     * Sendet eine Nachricht an Chat-Teilnehmer. Sollte vorher mit <code>.to</code> eine ID oder ein Raum
+     * festgelegt worden sein wird die Nachricht geflüstert.
+     * @param sender Name des Senders
+     * @param message Die Nachricht des Senders
+     */
+    message(sender, message) {
+        // whisper to room/person
+        if (this._to !== null && this._to !== undefined) {
+            io.to(`${this._to}`).emit('chat message', {
+                msg: message,
+                type: "message",
+                name: sender,
+                servertimestamp: Date.now()
+            });
+            this._to = null;
+        } else {
+            //Talk to everyone
+            this.io.emit('chat message', {
+                msg: message,
+                type: "message",
+                name: sender,
+                servertimestamp: Date.now()
+            });
+        }
+    }
+
+    /**
+     * Sendet eine Event Nachricht an Chat-Teilnehmer. Sollte vorher mit <code>.to</code> eine ID oder ein Raum
+     * festgelegt worden sein wird die Nachricht geflüstert.
+     * @param message Der Text des Events
+     */
+    event(message) {
+        // whisper to room/person
+        if (this._to !== null && this._to !== undefined) {
+            io.to(`${this._to}`).emit('chat message', {
+                msg: message,
+                type: "event",
+                servertimestamp: Date.now()
+            });
+            this._to = null;
+        } else {
+            //Talk to everyone
+            this.io.emit('chat message', {
+                msg: message,
+                type: "event",
+                servertimestamp: Date.now()
+            });
+        }
+    }
+
+    /**
+     * Setzt den Socket zum korrekten Senden der Nachrichten.
+     * @param socket Socket.io Socket der aktuellen Verbindung
+     */
+    setSocket(socket) {
+        this.socket = socket;
+    }
+
+    /**
+     * Setzt den/die Empfänger für die nächste Nachricht/das Nächste Event
+     * @param id Socket- oder Raum-Id
+     * @returns {Chat}
+     */
+    to(id) {
+        this._to = id;
+        return this;
+    }
+
+    /**
+     * Sendet eine Nachricht an alle ausser dem Absender
+     * @param sender Name des Senders
+     * @param message Die Nachricht des Senders
+     */
+    broadcast(sender, message) {
+        this.socket.broadcast.emit('chat message', {
+            msg: message,
+            type: "message",
+            name: sender,
+            servertimestamp: Date.now()
+        });
+    }
+
+    /**
+     * Sendet eine Event Nachricht an alle ausser dem Absender
+     * @param message der Text des Events
+     */
+    broadcastEvent(message) {
+        this.socket.broadcast.emit('chat message', {
+            msg: message,
+            type: "event",
+            servertimestamp: Date.now()
+        });
+    }
+
+}
+
+let chat = new Chat(io);
+
 const clientPath = path.resolve(path.dirname(require.main.filename) + '/../client/');
 app.use(express.static(clientPath));
 app.get('/', function (req, res) {
@@ -19,6 +129,7 @@ app.get('/', function (req, res) {
 var donethis = false;
 
 io.on('connection', function (socket) {
+    chat.setSocket(socket);
     if (secondHost) {
         if (typeof socket.isChecked == 'undefined' || socket.isChecked == null) {
             // überprüfen und isChecked setzen
@@ -58,13 +169,7 @@ io.on('connection', function (socket) {
             });
 
             // Andere über Beitritt des neuen Nutzers informieren
-            socket.broadcast.emit('chat message', {
-                // msg: user[socket.id].name + " ist dem server beigetreten ",
-                msg: gameserver.getUsername(socket) + " ist dem server beigetreten",
-                type: 'event',
-                servertimestamp: Date.now()
-            });
-
+            chat.broadcastEvent(gameserver.getUsername(socket) + " ist dem server beigetreten");
 
             // Benutzerliste updaten
             io.emit('user update', gameserver.getUsersInRooms());
@@ -108,8 +213,26 @@ io.on('connection', function (socket) {
 
         //log(gameserver.getRoomByUser(socket.id));
         let game = gameserver.getRoomByUser(socket.id).game;
-        console.log(game.positionShip(coordinates, socket.id));
-        console.log(game.player1Field, game.player2Field);
+        if (game !== undefined) {
+            //console.log(game.positionShip(coordinates, socket.id));
+            let moveResult = game.positionShip(coordinates, socket.id);
+
+            if (typeof moveResult === 'string') {
+                console.log(chat);
+
+                chat.to(socket.id).event(moveResult);
+            } else if (typeof moveResult === 'object') {
+                gameserver.saveData();
+                callback(moveResult);
+            } else {
+                console.log("[ERROR] battleships game move gab kein gültiges ergebnis ");
+            }
+            console.log(game.player1Field, game.player2Field);
+
+
+        } else {
+            chat.to(socket.id).event("Das Spiel hat noch nicht angefangen");
+        }
     });
 
     // Spieler zu einem Spiel einladen
@@ -117,25 +240,18 @@ io.on('connection', function (socket) {
         usernameSecond = usernameSecond.toString();
 
         if (usernameSecond === gameserver.getUsername(socket)) {
-            console.log('[EVENT-ERROR] ' + usernameSecond + ' hat sich selber eingeladen.');
 
-            socket.emit('chat message', {
-                code: 401,
-                msg: "Du kannst dich nicht selbst einladen.",
-                type: 'event',
-                servertimestamp: Date.now(),
-                error: true
-            });
+            console.log('[EVENT-ERROR] ' + usernameSecond + ' hat sich selber eingeladen.');
+            chat.to(socket.id).event("Du kannst dich nicht selbst einladen.");
+
             return false;
         }
 
         // prüfen ob der Benutzer noch online ist
         else if (!gameserver.isUser(usernameSecond)) {
-            socket.emit('chat message', {
-                msg: "Der Benutzer existiert nicht oder ist offline.", //todo wer ist ihr?
-                type: 'event',
-                servertimestamp: Date.now()
-            });
+
+            console.log('[EVENT-ERROR] ' + gameserver.getUsername(socket) + ' hat versucht ' + usernameSecond + ' einzuladen, aber Account offline oder nicht vorhanden.');
+            chat.to(socket.id).event("Der Benutzer existiert nicht oder ist offline.");
         } else {
             // Spieler noch online, Einladung anzeigen
             console.log("[EVENT] " + usernameSecond + ' wurde eingeladen von ' + gameserver.getUsername(socket));
@@ -154,23 +270,13 @@ io.on('connection', function (socket) {
     socket.on('join room', function (data) {
         // Test if player one is in an room already
         if (gameserver.isAlreadyInARoom(gameserver.getUser(data.user))) {
-            socket.emit('chat message', {
-                msg: "Dein Gegner ist bereits in einem Spiel",
-                type: 'event',
-                servertimestamp: Date.now(),
-                error: true
-            });
+            chat.to(socket.id).event("Dein Gegner ist bereits in einem Spiel");
             return;
         }
 
         // Test if player two is in an room already
         if (gameserver.isAlreadyInARoom(socket.id)) {
-            socket.emit('chat message', {
-                msg: "Du bist bereits in einem Spiel und kannst deshalb die Einladung nicht annehmen",
-                type: 'event',
-                servertimestamp: Date.now(),
-                error: true
-            });
+            chat.to(socket.id).event("Du bist bereits in einem Spiel und kannst deshalb die Einladung nicht annehmen");
             return;
         }
 
@@ -190,12 +296,7 @@ io.on('connection', function (socket) {
         gameserver.addGame(roomname, game);
         io.sockets.sockets[gameserver.getUser(data.user)].join(roomname); // Player 1 joins the room
         socket.join(roomname); // Player 2 joins the room
-        io.to(roomname).emit('chat message', {
-            type: "message",
-            msg: "Good Luck && Have fun",
-            serversimestamp: Date.now(),
-            name: "Server"
-        });
+        chat.to(roomname).message("Server", "Good Luck && Have fun");
 
         //todo: maybe let the sockets save the room name
 
@@ -213,11 +314,8 @@ io.on('connection', function (socket) {
             // Remove the invite from the list
             gameserver.cancelInvite(gameserver.getUser(data.user), gameserver.getUsername(socket));
 
-            socket.emit('chat message', {
-                msg: "Die Einladung wurde abgelehnt.",
-                type: 'event',
-                servertimestamp: Date.now(),
-            });
+            chat.to(gameserver.getUser(data.user)).event("Die Einladung an " + gameserver.getUsername(socket) + " wurde abgelehnt.");
+            chat.to(socket.id).event("Die Einladung von " + data.user + " wurde abgelehnt.");
         }
     });
 
@@ -226,13 +324,8 @@ io.on('connection', function (socket) {
     socket.on('chat message', function (data) {
         // Leerstring ignorieren
         if (data.msg.trim() === "") return false;
-
         console.log("[CHAT] " + gameserver.getUsername(socket) + ": " + data.msg);
-        data.type = "message";
-        data.serversimestamp = Date.now();
-        data.name = gameserver.getUsername(socket);
-
-        io.emit('chat message', data);
+        chat.message(gameserver.getUsername(socket), data.msg);
     });
 
 
@@ -246,12 +339,7 @@ io.on('connection', function (socket) {
 
 
                 console.log("[SERVER] '" + username + "' disconnected");
-                let data = {
-                    "msg": username + " hat den Server verlassen",
-                    type: "event",
-                    servertimestamp: Date.now()
-                };
-                socket.broadcast.emit('chat message', data);
+                chat.broadcastEvent(username + " hat den Server verlassen");
 
                 if (gameserver.isAlreadyInARoom(socket.id)) {
                     let roomData = gameserver.disbandRoom(socket.id);
@@ -263,11 +351,7 @@ io.on('connection', function (socket) {
                     } else {
                         notifySocket = roomData.firstplayer;
                     }
-                    io.to(`${notifySocket}`).emit('chat message', {
-                        msg: "Dein Gegenspieler hat den Raum verlassen",
-                        type: 'event',
-                        servertimestamp: Date.now()
-                    });
+                    chat.to(notifySocket).event("Dein Gegenspieler hat den Raum verlassen");
                     gameserver.disbandRoom(notifySocket);
 
                     //Let the other player leave the room
