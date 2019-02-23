@@ -49,7 +49,6 @@ class GameServer {
     }
 
     saveData() {
-
         let gamedata = {rooms: this.rooms, user: this.user, usernames: this.usernames, invites: this.invites};
         fs.writeFileSync("userdata.json", JSON.stringify(gamedata, null, 4), 'utf8');
     }
@@ -61,7 +60,6 @@ class GameServer {
         this.rooms = data.rooms;
         this.usernames = data.usernames;
         this.user = data.user;
-
 
         // console.log(this);
     }
@@ -184,10 +182,11 @@ class GameServer {
     }
 
     isAlreadyInARoom(socketid) {
-        let rooms = Object.keys(this.rooms);
+        let roomArray = Object.keys(this.rooms);
+        console.log(roomArray);
         let entry;
-        for (let index = 0; index < rooms.length; index++) {
-            entry = rooms[index];
+        for (let index = 0; index < roomArray.length; index++) {
+            entry = roomArray[index];
             if (entry.includes(socketid)) {
                 return true;
             }
