@@ -68,6 +68,7 @@ class GameServer {
         this.usernames[username] = newSocket.id; // rebind username
         this.user[newSocket.id] = {"name": username}; // rebind user socket
         this.updateInviteId(oldId, newSocket.id); // Updaten der Einladung
+        //todo updaten der Räume???
         this.deleteUser({id: oldId});
         this.saveData();
     }
@@ -101,9 +102,8 @@ class GameServer {
         if (oldid in this.invites) {
             this.invites[newid] = this.invites[oldid];
             delete this.invites[oldid];
-
-
         }
+
         // Updaten der versendeten Einladungen
         for (let key in this.invites) {
             if (this.invites[key].includes(oldid)) {
@@ -114,7 +114,6 @@ class GameServer {
     }
 
     getUsersInRooms() {
-
         let rooms = {"lobby": []};
         for (let key in this.user) {
             if (this.user[key].room) {
@@ -125,9 +124,7 @@ class GameServer {
                 rooms.lobby.push(this.user[key]);
             }
         }
-
         return rooms;
-
     }
 
     deleteInvitesFromSocketId(id) {
@@ -183,7 +180,6 @@ class GameServer {
 
     isAlreadyInARoom(socketid) {
         let roomArray = Object.keys(this.rooms);
-        console.log(roomArray);
         let entry;
         for (let index = 0; index < roomArray.length; index++) {
             entry = roomArray[index];

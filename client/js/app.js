@@ -259,7 +259,7 @@ $(function () {
 
     function selectField(coordinates, removeOtherSelections = true) {
         if (removeOtherSelections) {
-            $('.highlighted').removeClass('highlighted')
+            $('.player-field .highlighted').removeClass('highlighted')
         }
 
         let field = $('.game-player-container .player-field')[0]; // get player field

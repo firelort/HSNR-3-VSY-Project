@@ -218,8 +218,6 @@ io.on('connection', function (socket) {
             let moveResult = game.positionShip(coordinates, socket.id);
 
             if (typeof moveResult === 'string') {
-                console.log(chat);
-
                 chat.to(socket.id).event(moveResult);
             } else if (typeof moveResult === 'object') {
                 gameserver.saveData();
@@ -367,8 +365,6 @@ io.on('connection', function (socket) {
             console.log(e);
         }
     });
-
-
 });
 
 

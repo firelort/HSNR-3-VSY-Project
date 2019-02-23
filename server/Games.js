@@ -53,14 +53,6 @@ class Battleships extends Game {
             2: 4
         };
 
-        this.player1Field[0][0] = Battleships.FieldType.SHIP_UNDAMAGED;
-        this.player1Field[0][1] = Battleships.FieldType.SHIP_UNDAMAGED;
-        this.player1Field[0][2] = Battleships.FieldType.SHIP_UNDAMAGED;
-        this.player1Field[0][3] = Battleships.FieldType.SHIP_DAMAGED;
-        this.player1Field[0][4] = Battleships.FieldType.MISSED_SHOT;
-        this.player1Field[5][7] = Battleships.FieldType.SELECTED;
-
-
     }
 
     static get FieldType() {
@@ -102,8 +94,8 @@ class Battleships extends Game {
         return ships[length] > 0;
     }
 
-    _touchesShip(coordinates, playerId) {
-        let field = (playerId == this.player1) ? this.player1Field : this.player2Field;
+    _touchesShip(coordinates, field) {
+        //let field = (playerId == this.player1) ? this.player1Field : this.player2Field;
 
         return (field[coordinates.row - 1] && field[coordinates.row - 1][coordinates.column] === Battleships.FieldType.SHIP_UNDAMAGED) // top
             || (field[coordinates.row][coordinates.column + 1] && field[coordinates.row][coordinates.column + 1] === Battleships.FieldType.SHIP_UNDAMAGED) // right
@@ -187,7 +179,7 @@ class Battleships extends Game {
         console.log(startPosition);
         let hasStartPosition = (startPosition.row !== -1 && startPosition.column !== -1);
         console.log("has start", hasStartPosition);
-        if (this._touchesShip(position, playerId)) {
+        if (this._touchesShip(position, field)) {
             return "Dein Auswahlfeld darf kein anderes Schiff berühren."
         } else {
             let clickedCellValue = field[position.row][position.column];
