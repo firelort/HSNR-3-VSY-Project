@@ -1,17 +1,25 @@
 class Game {
     constructor(player1, player2) {
-
+        /*
         //copy construtor
         if (player1 && typeof player1 === 'object') {
             Object.assign(this, player1);
         } else {
+            this.player = [player1, player2];
+            this.playerTurn = 0; //playerTurn 0 = player1 1 = player2
+            this.gameState = Game.GameState.PREPARATION;
             this.player1 = player1;
             this.player2 = player2;
 
             this.activePlayer = player1;
             // this.state = this.GameTypes.PREPARATION;
-        }
+        }*/
 
+
+        this.player = [player1, player2];
+        this.playerTurn = 0; //playerTurn 0 = player1 1 = player2
+        this.activePlayer = player1.id;
+        this.gameState = Game.GameState.PREPARATION;
     }
 
     whoseTurn() {
@@ -32,28 +40,35 @@ class Game {
 class Battleships extends Game {
 
     constructor(player1, player2) {
-        super(player1, player2);
-        // Fill 10x10 Arrays with Battleships.FieldType.EMPTY
-        this.player1Field = [...Array(10)].map(x => Array(10).fill(Battleships.FieldType.EMPTY));
-        this.player2Field = [...Array(10)].map(x => Array(10).fill(Battleships.FieldType.EMPTY));
 
-
-        // length: amount
-        this.player1Ships = {
-            5: 1,
-            4: 2,
-            3: 3,
-            2: 4
+        let player1Object = {
+            "id": player1,
+            "field": [...Array(10)].map(x => Array(10).fill(Battleships.FieldType.EMPTY)), // Fill 10x10 Arrays with Battleships.FieldType.EMPTY
+            "shipsInStock": {
+                5: 1,
+                4: 2,
+                3: 3,
+                2: 4
+            },
+            "shipsInStockCount": 10,
+            "state": Battleships.StateType.PLACING
         };
 
-        this.player2Ships = {
-            5: 1,
-            4: 2,
-            3: 3,
-            2: 4
+        let player2Object = {
+            "id": player2,
+            "field": [...Array(10)].map(x => Array(10).fill(Battleships.FieldType.EMPTY)), // Fill 10x10 Arrays with Battleships.FieldType.EMPTY
+            "shipsInStock": {
+                5: 1,
+                4: 2,
+                3: 3,
+                2: 4
+            },
+            "shipsInStockCount": 10,
+            "state": Battleships.StateType.PLACING
         };
 
-    }
+        super(player1Object, player2Object);
+    };
 
     static get FieldType() {
         return {
@@ -66,6 +81,15 @@ class Battleships extends Game {
         }
     }
 
+    static get StateType() {
+        return {
+            PLAYING: 1,
+            WAITING: 2,
+            PLACING: 3,
+            READY: 4
+        }
+    }
+
     /**
      * Gibt das verschleierte Feld des Spielers zurück. Alle Felder die den Typ SHIP_UNDAMAGED enthalten werden durch
      * den Typ UNKNOWN ersetzt.
@@ -74,36 +98,31 @@ class Battleships extends Game {
      * @returns boolean|number[10][10] Das verschleierte Feld.
      */
     getObfuscatedField(playerId) {
+        let field;
+        for(let i = 0; i < 3; i++) {
+            if (i === 2) {
+                return false;
+            }
 
-        let obfuscatedField;
-        if (playerId === this.player1) {
-            obfuscatedField = this.player1Field.map(rows => rows.map(fieldType => (fieldType === Battleships.FieldType.SHIP_UNDAMAGED) ? Battleships.FieldType.UNKNOWN : fieldType));
-        } else if (playerId === this.player2) {
-            obfuscatedField = this.player2Field.map(rows => rows.map(fieldType => (fieldType === Battleships.FieldType.SHIP_UNDAMAGED) ? Battleships.FieldType.UNKNOWN : fieldType));
-        } else {
-            obfuscatedField = false
+            if (this.player[i].id === playerId) {
+                field = this.player[i].field.map(rows => rows.map(fieldType => (fieldType === Battleships.FieldType.SHIP_UNDAMAGED) ? Battleships.FieldType.UNKNOWN : fieldType));
+            }
         }
 
-        return obfuscatedField;
-
-
+        return field;
     }
 
     _isLengthAvailable(length, playerId) {
-        let ships = (playerId == this.player1) ? this.player1Ships : this.player2Ships;
+        let ships = (playerId == this.player[0].id) ? this.player[0].shipsInStock : this.player[1].shipsInStock;
         return ships[length] > 0;
     }
 
     _touchesShip(coordinates, field) {
-        //let field = (playerId == this.player1) ? this.player1Field : this.player2Field;
-
         return (field[coordinates.row - 1] && field[coordinates.row - 1][coordinates.column] === Battleships.FieldType.SHIP_UNDAMAGED) // top
             || (field[coordinates.row][coordinates.column + 1] && field[coordinates.row][coordinates.column + 1] === Battleships.FieldType.SHIP_UNDAMAGED) // right
             || (field[coordinates.row + 1] && field[coordinates.row + 1][coordinates.column] === Battleships.FieldType.SHIP_UNDAMAGED) // bottom
             || (field[coordinates.row][coordinates.column - 1] && field[coordinates.row][coordinates.column - 1] === Battleships.FieldType.SHIP_UNDAMAGED) // left
-
     }
-
 
     _setPathActive(start, end, field) {
 
@@ -142,13 +161,13 @@ class Battleships extends Game {
         if (start.row === end.row && start.column !== end.column) { // horizontal
             startColumn = (start.column > end.column ? end.column : start.column);
             endColumn = (start.column < end.column ? end.column : start.column);
-            for (let i = startColumn; i <= endColumn && (isFree); i++) {
+            for (let i = startColumn; i <= endColumn && isFree; i++) {
                 isFree = !this._touchesShip({row: start.row, column: i}, field);
             }
         } else if (start.row !== end.row && start.column === end.column) { // senkrecht
             startRow = (start.row > end.row ? end.row : start.row);
             endRow = (start.row < end.row ? end.row : start.row);
-            for (let i = startRow; i <= endRow && (isFree); i++) {
+            for (let i = startRow; i <= endRow && isFree; i++) {
                 isFree = !this._touchesShip({row: i, column: start.column}, field);
             }
         }
@@ -158,18 +177,15 @@ class Battleships extends Game {
 
     _isInLine(start, end) {
         return (start.row === end.row && start.column !== end.column) || (start.column === end.column && start.row !== end.row)
-
     }
 
     _reduceShipCounter(length, playerId) {
-        let ships = (playerId == this.player1) ? this.player1Ships : this.player2Ships;
+        let ships = (playerId == this.player[0].id) ? this.player[0].shipsInStock : this.player[1].shipsInStock;
         ships[length]--;
     }
 
     positionShip(position, playerId) {
-
-
-        let field = (playerId == this.player1) ? this.player1Field : this.player2Field;
+        let field = (playerId == this.player[0].id) ? this.player[0].field : this.player[1].field;
         //console.log(field);
         let startPosition = {row: -1, column: -1};
         startPosition.row = field.findIndex(row => {
@@ -199,9 +215,14 @@ class Battleships extends Game {
                     if (this._isLengthAvailable(shipLength, playerId)) {
                         if (this._isPathAvailable(startPosition, position, field)) {
 
-                            console.log(this._reduceShipCounter(shipLength, playerId));
+                            this._reduceShipCounter(shipLength, playerId);
                             this._setPathActive(startPosition, position, field);
-                            return {start: startPosition, end: position, type: Battleships.FieldType.SHIP_UNDAMAGED, reduceCounter: shipLength};
+                            return {
+                                start: startPosition,
+                                end: position,
+                                type: Battleships.FieldType.SHIP_UNDAMAGED,
+                                reduceCounter: shipLength
+                            };
 
                         } else {
                             return "Zwischen den Koordinaten befinden sich Felder die nicht besetzt werden können.";
