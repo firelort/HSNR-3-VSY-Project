@@ -72,7 +72,7 @@ function reduceShipCounter(length) {
     let counter = $('.game-player-container li[data-length=' + length + ']');
     let amount = counter.data("count") - 1;
     counter.data("count", amount);
-    counter.text(amount + " x " + length);
+    counter.children("span").text(amount);
     return amount;
 
 

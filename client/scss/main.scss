@@ -158,6 +158,27 @@ body, html {
   }
 }
 
+.static-ship {
+  z-index: 100;
+  pointer-events: none;
+
+  &.uboot {
+    width: 60px;
+  }
+
+  &.kreuzer {
+    width: 120px;
+  }
+
+  &.zerstoerer {
+    width: 90px;
+  }
+
+  &.schlachtschiff {
+    width: 150px;
+  }
+}
+
 .ship {
 
   pointer-events: none;
