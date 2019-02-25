@@ -14,11 +14,7 @@ class Game {
             this.activePlayer = player1;
             // this.state = this.GameTypes.PREPARATION;
         }*/
-
-
-        this.player = [player1, player2];
-        this.playerTurn = 0; //playerTurn 0 = player1 1 = player2
-        this.activePlayer = player1.id;
+        this.activePlayer = player1;
         this.gameState = Game.GameState.PREPARATION;
     }
 

@@ -3,8 +3,9 @@ var Game = require("./Game");
 class Battleships extends Game {
 
     constructor(player1, player2) {
-
-        let player1Object = {
+        super(player1, player2);
+        this.players = {};
+        this.players[player1] = {
             "id": player1,
             "field": [...Array(10)].map(x => Array(10).fill(Battleships.FieldType.EMPTY)), // Fill 10x10 Arrays with Battleships.FieldType.EMPTY
             "shipsInStock": {
@@ -17,7 +18,7 @@ class Battleships extends Game {
             "state": Battleships.StateType.PLACING
         };
 
-        let player2Object = {
+        this.players[player2] = {
             "id": player2,
             "field": [...Array(10)].map(x => Array(10).fill(Battleships.FieldType.EMPTY)), // Fill 10x10 Arrays with Battleships.FieldType.EMPTY
             "shipsInStock": {
@@ -30,7 +31,6 @@ class Battleships extends Game {
             "state": Battleships.StateType.PLACING
         };
 
-        super(player1Object, player2Object);
     };
 
     static get FieldType() {
@@ -61,23 +61,13 @@ class Battleships extends Game {
      * @returns boolean|number[10][10] Das verschleierte Feld.
      */
     getObfuscatedField(playerId) {
-        let field;
-        for(let i = 0; i < 3; i++) {
-            if (i === 2) {
-                return false;
-            }
-
-            if (this.player[i].id === playerId) {
-                field = this.player[i].field.map(rows => rows.map(fieldType => (fieldType === Battleships.FieldType.SHIP_UNDAMAGED) ? Battleships.FieldType.UNKNOWN : fieldType));
-            }
-        }
+        let field = this.players[playerId].field.map(rows => rows.map(fieldType => (fieldType === Battleships.FieldType.SHIP_UNDAMAGED) ? Battleships.FieldType.UNKNOWN : fieldType));
 
         return field;
     }
 
     _isLengthAvailable(length, playerId) {
-        let ships = (playerId == this.player[0].id) ? this.player[0].shipsInStock : this.player[1].shipsInStock;
-        return ships[length] > 0;
+        return this.players[playerId].shipsInStock[length] > 0;
     }
 
     _touchesShip(coordinates, field) {
@@ -143,12 +133,11 @@ class Battleships extends Game {
     }
 
     _reduceShipCounter(length, playerId) {
-        let ships = (playerId == this.player[0].id) ? this.player[0].shipsInStock : this.player[1].shipsInStock;
-        ships[length]--;
+        this.players[playerId].shipsInStock[length]--;
     }
 
     positionShip(position, playerId) {
-        let field = (playerId == this.player[0].id) ? this.player[0].field : this.player[1].field;
+        let field = this.players[playerId].field;
         //console.log(field);
         let startPosition = {row: -1, column: -1};
         startPosition.row = field.findIndex(row => {
