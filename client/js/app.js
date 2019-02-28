@@ -241,9 +241,11 @@ $(function () {
                         placeShipImage(moveResult.start, moveResult.end, moveResult.reduceCounter);
                         break;
                     case 3: // Field selected
+                    case 0: // Field unselected
                         //increase by one because field descriptions are in [0]
                         selectField({row: ++moveResult.row, column: ++moveResult.column});
                         break;
+
                 }
             });
             //positionShip({row: row, column: column});
@@ -258,14 +260,14 @@ $(function () {
     });
 
     function selectField(coordinates, removeOtherSelections = true) {
-        if (removeOtherSelections) {
-            $('.player-field .highlighted').removeClass('highlighted')
-        }
+        // if (removeOtherSelections) {
+        //     $('.player-field .highlighted').removeClass('highlighted')
+        // }
 
         let field = $('.game-player-container .player-field')[0]; // get player field
         let cell = field.rows[coordinates.row].cells[coordinates.column]; // get cell
         let $cell = $(cell); // cast to jquery object
-        $cell.addClass('highlighted');
+        $cell.toggleClass('highlighted');
 
     }
 

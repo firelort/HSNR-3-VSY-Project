@@ -147,6 +147,13 @@ class Battleships extends Game {
         console.log(startPosition);
         let hasStartPosition = (startPosition.row !== -1 && startPosition.column !== -1);
         console.log("has start", hasStartPosition);
+
+
+        if(startPosition.row === position.row && startPosition.column === position.column){
+            field[position.row][position.column] = Battleships.FieldType.EMPTY;
+            return {...position, type: Battleships.FieldType.EMPTY};
+        }
+
         if (this._touchesShip(position, field)) {
             return "Dein Auswahlfeld darf kein anderes Schiff berühren."
         } else {
