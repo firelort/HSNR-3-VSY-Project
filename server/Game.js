@@ -1,5 +1,5 @@
 class Game {
-    constructor(player1, player2) {
+    constructor(player1, player2, io) {
         /*
         //copy construtor
         if (player1 && typeof player1 === 'object') {
@@ -14,6 +14,7 @@ class Game {
             this.activePlayer = player1;
             // this.state = this.GameTypes.PREPARATION;
         }*/
+        this.io = io;
         this.activePlayer = player1;
         this.gameState = Game.GameState.PREPARATION;
     }

@@ -1,9 +1,12 @@
 var Game = require("./Game");
+var util = require('util');
 
 class Battleships extends Game {
 
-    constructor(player1, player2) {
-        super(player1, player2);
+    constructor(player1, player2, io) {
+        super(player1, player2, io);
+
+
         this.players = {};
         this.players[player1] = {
             "id": player1,
@@ -30,6 +33,10 @@ class Battleships extends Game {
             "shipsInStockCount": 10,
             "state": Battleships.StateType.PLACING
         };
+
+        this.roomname = "2::" + player1 + "::" + player2
+
+        this.initSocketListener();
 
     };
 
@@ -65,6 +72,11 @@ class Battleships extends Game {
 
         return field;
     }
+
+    setGameServer(gameserver) {
+        this.gameserver = gameserver;
+    }
+
 
     _isLengthAvailable(length, playerId) {
         return this.players[playerId].shipsInStock[length] > 0;
@@ -134,6 +146,7 @@ class Battleships extends Game {
 
     _reduceShipCounter(length, playerId) {
         this.players[playerId].shipsInStock[length]--;
+        this.players[playerId].shipsInStockCount--;
     }
 
     positionShip(position, playerId) {
@@ -149,7 +162,7 @@ class Battleships extends Game {
         console.log("has start", hasStartPosition);
 
 
-        if(startPosition.row === position.row && startPosition.column === position.column){
+        if (startPosition.row === position.row && startPosition.column === position.column) {
             field[position.row][position.column] = Battleships.FieldType.EMPTY;
             return {...position, type: Battleships.FieldType.EMPTY};
         }
@@ -176,6 +189,9 @@ class Battleships extends Game {
 
                             this._reduceShipCounter(shipLength, playerId);
                             this._setPathActive(startPosition, position, field);
+                            if (this.players[playerId].shipsInStockCount === 0) {
+                                this.players[playerId].state === Battleships.StateType.READY;
+                            }
                             return {
                                 start: startPosition,
                                 end: position,
@@ -195,6 +211,49 @@ class Battleships extends Game {
 
         }
         //return (errorMessage) ? errorMessage : true;
+    }
+
+    initSocketListener() {
+
+        // io.on connection kann nicht genutzt werden da keine Instanz dieser Klasse zu dem Zeitpunkt exisitert
+        let gameroom = this.io.sockets.in(this.roomname);
+        Object.keys(gameroom.sockets).forEach((element) => {
+            let socket = gameroom.sockets[element];
+
+            socket.on('battleships game move', (coordinates, callback) => {
+                console.log("[EVENT] " + this.gameserver.getUsername(socket) + " machte move:  " + coordinates.row + ":" + coordinates.column)
+
+                //log(gameserver.getRoomByUser(socket.id));
+                let game = this.gameserver.getRoomByUser(socket.id).game;
+                if (game !== undefined) {
+                    //console.log(game.positionShip(coordinates, socket.id));
+                    let moveResult = game.positionShip(coordinates, socket.id);
+
+                    if (typeof moveResult === 'string') {
+                        this.gameserver.chat.to(socket.id).event(moveResult);
+                    } else if (typeof moveResult === 'object') {
+                        this.gameserver.saveData();
+                        callback(moveResult);
+                    } else {
+                        console.log("[ERROR] battleships game move gab kein gültiges ergebnis ");
+                    }
+                    console.log(game.player1Field, game.player2Field);
+
+
+                } else {
+                    this.gameserver.chat.to(socket.id).event("Das Spiel hat noch nicht angefangen");
+                }
+            });
+
+        });
+    }
+
+    /**
+     * Benutzerdefinierte toJSON um circular dependencies zu vermeiden.
+     * @returns {{players: ({}|*)}} Spielerstatistiken
+     */
+    toJSON() {
+        return {players: this.players};
     }
 
 }

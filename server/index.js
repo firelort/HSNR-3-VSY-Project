@@ -4,16 +4,19 @@ var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var secondHost = false;
-var gameserver = require("./GameServer.js");
+var GameServer = require("./GameServer.js");
 var Battleships = require("./Battleships.js");
 var TicTacToe = require("./TicTacToe.js");
 var Chat = require("./Chat.js");
+
 
 function log(data) {
     console.log(require('util').inspect(data, true, 10));
 }
 
 let chat = new Chat(io);
+
+let gameserver = new GameServer(chat, io);
 
 const clientPath = path.resolve(path.dirname(require.main.filename) + '/../client/');
 app.use(express.static(clientPath));
@@ -44,181 +47,13 @@ io.on('connection', function (socket) {
     /**
      * Usernamen setzen für den Socket
      */
-    socket.on('set username', function (username) {
-
-        // Leerstring prüfen
-        if (username.trim() === "") {
-            socket.emit('set username', {
-                'code': 401, 'msg': "Dein Benutzername darf nicht leer sein", 'error': true
-            });
-            return false;
-        }
-        // existiert Benutzer bereits?
-        if (!gameserver.isUser(username)) {
-            // Username frei, Werte speichern und Erfolg melden
-            gameserver.registerUser(username, socket);
-            console.log("[EVENT] '" + gameserver.getUsername(socket) + "' ist dem server beigetreten");
-            socket.emit('set username', {
-                'code': 200, 'msg': "ok", 'error': false
-            });
-
-            // Andere über Beitritt des neuen Nutzers informieren
-            chat.broadcastEvent(gameserver.getUsername(socket) + " ist dem server beigetreten");
-
-            // Benutzerliste updaten
-            io.emit('user update', gameserver.getUsersInRooms());
 
 
-        } else {
-            // Username exisitert, Fehler ausgeben
-            socket.emit('set username', {
-                'code': 409, 'msg': "Der Name '" + username + "' existiert bereits", 'error': true
-            });
-        }
 
 
-    });
 
-    socket.on('oldid', function (oldid, username) {
-        console.log(oldid, username, socket.id);
-        gameserver.changeId(oldid, username, socket);
-    });
-
-    // Gegenspieler mitteilen welches Feld gespielt wurde
-    // TODO für verschiedene Spiele anpassen
-    socket.on('game move', function (data) {
-        console.log("[EVENT] " + gameserver.getUsername(socket) + " machte move:  " + data.row + ":" + data.column)
-
-        log(gameserver.getRoomByUser(socket.id));
-
-
-        socket.broadcast.emit('accepted game move', {
-            msg: gameserver.getUsername(socket) + " machte move:  " + data.row + ":" + data.column,
-            type: 'event',
-            servertimestamp: Date.now(),
-            move: data
-        });
-
-
-    });
-
-    socket.on('battleships game move', function (coordinates, callback) {
-        console.log("[EVENT] " + gameserver.getUsername(socket) + " machte move:  " + coordinates.row + ":" + coordinates.column)
-
-        //log(gameserver.getRoomByUser(socket.id));
-        let game = gameserver.getRoomByUser(socket.id).game;
-        if (game !== undefined) {
-            //console.log(game.positionShip(coordinates, socket.id));
-            let moveResult = game.positionShip(coordinates, socket.id);
-
-            if (typeof moveResult === 'string') {
-                chat.to(socket.id).event(moveResult);
-            } else if (typeof moveResult === 'object') {
-                gameserver.saveData();
-                callback(moveResult);
-            } else {
-                console.log("[ERROR] battleships game move gab kein gültiges ergebnis ");
-            }
-            console.log(game.player1Field, game.player2Field);
-
-
-        } else {
-            chat.to(socket.id).event("Das Spiel hat noch nicht angefangen");
-        }
-    });
 
     // Spieler zu einem Spiel einladen
-    socket.on('invite player', function (usernameSecond) {
-        usernameSecond = usernameSecond.toString();
-
-        if (usernameSecond === gameserver.getUsername(socket)) {
-
-            console.log('[EVENT-ERROR] ' + usernameSecond + ' hat sich selber eingeladen.');
-            chat.to(socket.id).event("Du kannst dich nicht selbst einladen.");
-
-            return false;
-        }
-
-        // prüfen ob der Benutzer noch online ist
-        else if (!gameserver.isUser(usernameSecond)) {
-
-            console.log('[EVENT-ERROR] ' + gameserver.getUsername(socket) + ' hat versucht ' + usernameSecond + ' einzuladen, aber Account offline oder nicht vorhanden.');
-            chat.to(socket.id).event("Der Benutzer existiert nicht oder ist offline.");
-        } else {
-            // Spieler noch online, Einladung anzeigen
-            console.log("[EVENT] " + usernameSecond + ' wurde eingeladen von ' + gameserver.getUsername(socket));
-            gameserver.createInvite(socket.id, usernameSecond);
-
-            io.to(`${gameserver.getUser(usernameSecond)}`).emit('invite', {
-                gametype: 2,
-                gamename: "BATTLESHIPS",
-                user: gameserver.getUsername(socket),
-                servertimestamp: Date.now()
-            })
-        }
-    });
-
-    // Spieler in einem Raum stecken
-    socket.on('join room', function (data) {
-        // Test if player one is in an room already
-        if (gameserver.isAlreadyInARoom(gameserver.getUser(data.user))) {
-            chat.to(socket.id).event("Dein Gegner ist bereits in einem Spiel");
-            return;
-        }
-
-        // Test if player two is in an room already
-        if (gameserver.isAlreadyInARoom(socket.id)) {
-            chat.to(socket.id).event("Du bist bereits in einem Spiel und kannst deshalb die Einladung nicht annehmen");
-            return;
-        }
-
-        // Test if the invite is valid
-        if (!gameserver.isValidInvite(data.user, socket.id)) {
-            return;
-        }
-        // Create a new Room and let the user join
-        let roomname = gameserver.createRoom(data.user, socket.id, data.gametype);
-        let game;
-        if (data.gametype == 2) {
-            game = new Battleships(gameserver.getUser(data.user), socket.id);
-        } else if (data.gametype == 1) {
-            game = new TicTacToe(gameserver.getUser(data.user), socket.id);
-        }
-
-        gameserver.addGame(roomname, game);
-        io.sockets.sockets[gameserver.getUser(data.user)].join(roomname); // Player 1 joins the room
-        socket.join(roomname); // Player 2 joins the room
-        chat.to(roomname).message("Server", "Good Luck && Have fun");
-
-        //todo: maybe let the sockets save the room name
-
-        // Delete both sockets from the invite obj.
-        gameserver.deleteInvitesFromSocketId(gameserver.getUser(data.user));
-        gameserver.deleteInvitesFromSocketId(socket.id);
-
-        // Benutzerliste updaten
-        io.emit('user update', gameserver.getUsersInRooms());
-    });
-
-    socket.on('reject invite', function (data) {
-        // Test if the invite is valid
-        if (gameserver.isValidInvite(data.user, socket.id)) {
-            // Remove the invite from the list
-            gameserver.cancelInvite(gameserver.getUser(data.user), gameserver.getUsername(socket));
-
-            chat.to(gameserver.getUser(data.user)).event("Die Einladung an " + gameserver.getUsername(socket) + " wurde abgelehnt.");
-            chat.to(socket.id).event("Die Einladung von " + data.user + " wurde abgelehnt.");
-        }
-    });
-
-
-    // Chatnachricht senden
-    socket.on('chat message', function (data) {
-        // Leerstring ignorieren
-        if (data.msg.trim() === "") return false;
-        console.log("[CHAT] " + gameserver.getUsername(socket) + ": " + data.msg);
-        chat.message(gameserver.getUsername(socket), data.msg);
-    });
 
 
     // Beim schließen der Verbindung eine Meldung an andere Nutzer senden und Spieler aus Listen entfernen

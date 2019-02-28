@@ -6,7 +6,12 @@ class Chat {
      */
     constructor(io) {
         this.io = io;
+        this.initSocketListener();
 
+    }
+
+    setGameServer(gameserver){
+        this.gameserver = gameserver;
     }
 
     /**
@@ -102,6 +107,19 @@ class Chat {
             type: "event",
             servertimestamp: Date.now()
         });
+    }
+
+    initSocketListener() {
+        //this.io.on('connection', (socket) => {});
+        this.io.on('connection', (socket) => {
+            socket.on('chat message',  (data) => {
+                // Leerstring ignorieren
+                if (data.msg.trim() === "") return false;
+                console.log("[CHAT] " + this.gameserver.getUsername(socket) + ": " + data.msg);
+                this.message(this.gameserver.getUsername(socket), data.msg);
+            });
+        });
+
     }
 
 }

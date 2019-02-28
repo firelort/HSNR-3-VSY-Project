@@ -303,7 +303,7 @@ $(function () {
     });
 
     $('div.invite-box div.buttons button.btn-red').click(function () {
-        socket.emit('reject invite', {user: $('div.invite-box div.buttons button.btn-red').data('user')});
+        socket.emit('reject invite', $('div.invite-box div.buttons button.btn-red').data('user'));
         closeInvite();
     });
 
