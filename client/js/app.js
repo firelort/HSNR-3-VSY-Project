@@ -7,6 +7,21 @@ var chatw = class {
         return chatw.instance;
 
     }
+
+    message(messageDetails) {
+        let item = $('<li>');
+        item.addClass('message');
+
+        if (messageDetails.type == 'message') {
+            item.html("<b>" + messageDetails.name + "</b>: " + messageDetails.msg);
+        } else if (messageDetails.type == 'event') {
+            item.html("<i>" + messageDetails.msg + "</i>");
+        } else {
+            item.html("<i>" + messageDetails.msg + "</i>");
+        }
+
+        this.container.append(item);
+    }
 };
 
 
@@ -102,16 +117,7 @@ $(function () {
 
         }).on('chat message', function (msg) {
             if (isLoggedIn) {
-                var item = $('<li>');
-                item.addClass('message');
-
-                if (msg.type == 'message') {
-                    item.html("<b>" + msg.name + "</b>: " + msg.msg);
-                } else if (msg.type == 'event') {
-                    item.html("<i>" + msg.msg + "</i>");
-                }
-
-                $('#messages').append(item);
+                chat.message(msg);
             }
         }).on('accepted game move', function (data) {
 
@@ -169,13 +175,142 @@ $(function () {
             $('div.invite-box div.buttons button.btn-green').data('user', data.user);
             $('div.invite-box div.buttons button.btn-red').data('user', data.user);
             $('div.invite-box')[0].style.zIndex = 100;
+        }).on('battleships player change state', function (playerId, state) {
+            if (playerId === userid) {
+                playerReady = true;
+                if (enemyReady) {
+                    startPlayingMode()
+                } else
+                    chat.message({msg: "Dein Gegner ist noch nicht bereit. Warte einen Augenblick."});
+            } else {
+                enemyReady = true;
+                if (playerReady) {
+                    startPlayingMode()
+                } else
+                    chat.message({msg: "Dein Gegner ist bereit. Lass ihn nicht zu lange warten."})
+            }
+
+        }).on('start game battleships', function () {
+            clearField();
+            createTables();
+            createShipCounter();
+
+            gameState = 3; // placing
         });
+    }
+
+    function startPlayingMode() {
+        gameState = 1; // playing
+        document.querySelector('.player-ships ul').innerHTML = ''; // remove ship counter
+
+
     }
 
 
     var isLoggedIn = false;
 
     var typingTimeout;
+
+    var enemyReady = false;
+    var playerReady = false;
+
+    var gameState = 2; // waiting
+
+    function clearField() {
+        document.querySelector('.player-ships ul').innerHTML = '';
+        let opponentField = document.querySelector('.game-opponent-container .player-field');
+        let playerField = document.querySelector('.game-player-container .player-field')
+        if (playerField) playerField.remove();
+        if (opponentField) opponentField.remove();
+
+
+    }
+
+
+    function createTables() {
+        var opponent = document.querySelector('.game-opponent-container'),
+            player = document.querySelector('.game-player-container'),
+            tbl = document.createElement('table');
+        tbl.classList.add('player-field');
+        var header = tbl.createTHead();
+        var body = document.createElement('tbody');
+        var row = header.insertRow();
+        for (var i = 0; i < 11; i++) {
+            var th = row.appendChild(document.createElement("th"));
+
+            if (i !== 0) {
+
+                th.appendChild(document.createTextNode(i));
+            }
+        }
+
+
+        for (var i = 0; i < 10; i++) {
+            var tr = body.insertRow();
+            for (var j = 0; j < 11; j++) {
+
+                var td = tr.insertCell();
+                if (j === 0) {
+                    td.appendChild(document.createTextNode(String.fromCharCode(65 + i)));
+
+                }
+            }
+        }
+
+        tbl.appendChild(body);
+        player.prepend(tbl);
+        opponent.prepend(tbl.cloneNode(true));
+    }
+
+    function createShipCounter() {
+
+        let list = document.querySelector('.player-ships ul');
+
+        for (let i = 0; i < 4; i++) {
+            let length = 5 - i;
+            let count = 1 + i;
+
+            let item = document.createElement('li');
+            item.setAttribute('data-length', length);
+            item.setAttribute('data-count', count);
+
+            let amountSpan = document.createElement('span');
+            amountSpan.classList.add('amount');
+            amountSpan.appendChild(document.createTextNode(count));
+
+            let img = document.createElement('img');
+            img.classList.add('static-ship');
+
+            let shipType;
+
+            switch (length) {
+                case 5:
+                    shipType = 'schlachtschiff';
+                    break;
+                case 4:
+                    shipType = 'kreuzer';
+                    break;
+                case 3:
+                    shipType = 'zerstoerer';
+                    break;
+                case 2:
+                    shipType = 'uboot';
+                    break;
+            }
+
+            img.setAttribute('src', './images/' + shipType + '.png');
+            img.classList.add(shipType);
+
+            item.appendChild(amountSpan);
+            item.appendChild(document.createTextNode(" x "));
+            item.appendChild(img);
+
+            list.appendChild(item);
+
+        }
+
+
+    }
 
 
     function closeContextmenu() {
@@ -219,8 +354,9 @@ $(function () {
     });
 
 
-    $(".game-player-container tbody tr").click(function (e) {
+    $(document).on('click', ".game-player-container tbody tr", function (e) {
 
+        if (gameState != 3) return;
         let row = this.rowIndex;
         let column = e.target.cellIndex;
         if ((row) >= 1 && (row) <= 10 && column >= 1 && column <= 10) {
@@ -247,6 +383,33 @@ $(function () {
                         break;
 
                 }
+            });
+            //positionShip({row: row, column: column});
+        }
+
+    });
+
+    $(document).on('click', ".game-opponent-container tbody tr", function (e) {
+
+        if (gameState != 1) return;
+        let row = this.rowIndex;
+        let column = e.target.cellIndex;
+        if ((row) >= 1 && (row) <= 10 && column >= 1 && column <= 10) {
+            // decrease coordinates by 1 to match array counting
+            socket.emit('battleships game attack', {row: --row, column: --column}, function (moveResult) {
+
+                // console.log(moveResult);
+                // switch (moveResult.type) {
+                //     case 1: // select path (position ship)
+                //
+                //         break;
+                //     case 3: // Field selected
+                //     case 0: // Field unselected
+                //         //increase by one because field descriptions are in [0]
+                //         selectField({row: ++moveResult.row, column: ++moveResult.column});
+                //         break;
+                //
+                // }
             });
             //positionShip({row: row, column: column});
         }

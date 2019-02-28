@@ -57,7 +57,7 @@ class GameServer {
                     console.log("[EVENT] " + usernameSecond + ' wurde eingeladen von ' + this.getUsername(socket));
                     this.createInvite(socket.id, usernameSecond);
 
-                    this.io.to(`${gameserver.getUser(usernameSecond)}`).emit('invite', {
+                    this.io.to(`${this.getUser(usernameSecond)}`).emit('invite', {
                         gametype: 2,
                         gamename: "BATTLESHIPS",
                         user: this.getUsername(socket),
@@ -146,7 +146,7 @@ class GameServer {
                 this.io.sockets.sockets[this.getUser(data.user)].join(roomname); // Player 1 joins the room
                 socket.join(roomname); // Player 2 joins the room
                 this.chat.to(roomname).message("Server", "Good Luck && Have fun");
-
+                this.io.to(roomname).emit('start game battleships');
                 //todo: maybe let the sockets save the room name
 
                 // Delete both sockets from the invite obj.

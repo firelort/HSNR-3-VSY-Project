@@ -150,6 +150,7 @@ class Battleships extends Game {
     }
 
     positionShip(position, playerId) {
+
         let field = this.players[playerId].field;
         //console.log(field);
         let startPosition = {row: -1, column: -1};
@@ -189,8 +190,15 @@ class Battleships extends Game {
 
                             this._reduceShipCounter(shipLength, playerId);
                             this._setPathActive(startPosition, position, field);
-                            if (this.players[playerId].shipsInStockCount === 0) {
-                                this.players[playerId].state === Battleships.StateType.READY;
+                            if (this.players[playerId].shipsInStockCount === 0 && this.players[playerId].state === Battleships.StateType.PLACING) {
+                                this.players[playerId].state = Battleships.StateType.READY;
+                                if (this.players[this.getOpponentId(playerId)].state === Battleships.StateType.READY) {
+                                    this.players[this.getOpponentId(playerId)].state = Battleships.StateType.PLAYING;
+                                    this.players[playerId].state = Battleships.StateType.PLAYING;
+                                }
+                                this.io.to(this.roomname).emit('battleships player change state', playerId, Battleships.StateType.READY);
+
+
                             }
                             return {
                                 start: startPosition,
@@ -211,6 +219,15 @@ class Battleships extends Game {
 
         }
         //return (errorMessage) ? errorMessage : true;
+    }
+
+    getOpponentId(playerId) {
+        let opponentId = null;
+        Object.keys(this.players).forEach((element) => {
+            if (playerId !== element) opponentId = element;
+        });
+        return opponentId;
+
     }
 
     initSocketListener() {
