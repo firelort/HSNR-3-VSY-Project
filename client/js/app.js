@@ -125,7 +125,7 @@ $(function () {
             item.addClass('message');
 
             item.html("<i>" + data.msg + "</i>");
-            $('.player-field tr').eq(data.move.row).find('td').eq(data.move.column).addClass('active')
+            $('.player-field tr').eq(data.move.row).find('td').eq(data.move.column).addClass('active');
 
             $('#messages').append(item);
 
@@ -196,6 +196,30 @@ $(function () {
             createShipCounter();
 
             gameState = 3; // placing
+        }).on('battleships attack accepted', function (moveResult) {
+
+            console.log(moveResult);
+            let field;
+
+            if (moveResult.attacker !== username) {
+                field = $('.game-player-container .player-field tr');
+            } else {
+                field = $('.game-opponent-container .player-field tr');
+            }
+
+            switch (moveResult.fieldType) {
+
+                case 2: // hit
+                    console.log('hit');
+                    field.eq(++moveResult.position.row).find('td').eq(++moveResult.position.column).addClass('ship-hit');
+                    break;
+                case -1: //miss
+
+                    console.log('miss');
+                    field.eq(++moveResult.position.row).find('td').eq(++moveResult.position.column).addClass('ship-miss');
+                    break;
+
+            }
         });
     }
 
@@ -360,6 +384,7 @@ $(function () {
         let row = this.rowIndex;
         let column = e.target.cellIndex;
         if ((row) >= 1 && (row) <= 10 && column >= 1 && column <= 10) {
+            console.log("clicke");
             // decrease coordinates by 1 to match array counting
             socket.emit('battleships game move', {row: --row, column: --column}, function (moveResult) {
 
@@ -391,27 +416,13 @@ $(function () {
 
     $(document).on('click', ".game-opponent-container tbody tr", function (e) {
 
-        if (gameState != 1) return;
+        if (gameState !== 1) return;
         let row = this.rowIndex;
         let column = e.target.cellIndex;
         if ((row) >= 1 && (row) <= 10 && column >= 1 && column <= 10) {
             // decrease coordinates by 1 to match array counting
-            socket.emit('battleships game attack', {row: --row, column: --column}, function (moveResult) {
-
-                // console.log(moveResult);
-                // switch (moveResult.type) {
-                //     case 1: // select path (position ship)
-                //
-                //         break;
-                //     case 3: // Field selected
-                //     case 0: // Field unselected
-                //         //increase by one because field descriptions are in [0]
-                //         selectField({row: ++moveResult.row, column: ++moveResult.column});
-                //         break;
-                //
-                // }
-            });
-            //positionShip({row: row, column: column});
+            console.log("batte attacke");
+            socket.emit('battleships game attack', {row: --row, column: --column});
         }
 
     });

@@ -2,6 +2,7 @@ function setPathActive(start, end) {
 
     let startRow, startColumn, endRow, endColumn;
     let rows = $('.game-player-container .player-field tr');
+    $('.game-player-container .player-field td').removeClass('highlighted');
     if (start.row === end.row && start.column !== end.column) { // horizontal
         startColumn = (start.column > end.column ? end.column : start.column);
         endColumn = (start.column < end.column ? end.column : start.column);
@@ -18,7 +19,7 @@ function setPathActive(start, end) {
 
 }
 
-function placeShipImage(start, end, length){
+function placeShipImage(start, end, length) {
     let ship;
     switch (length) {
         case 2:

@@ -20,7 +20,7 @@ class Game {
     }
 
     whoseTurn() {
-        this.activePlayer;
+        return this.activePlayer;
     }
 
     static get GameState() {

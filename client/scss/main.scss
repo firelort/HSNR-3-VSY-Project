@@ -219,17 +219,29 @@ body, html {
     background: #e7e8e8;
     border: 1px solid #000;
 
+
+    &.highlighted {
+      background: #f6776a!important;
+    }
+
+    &.ship-hit {
+      background: #f00 !important;
+    }
+
     &:nth-child(odd) {
       background: #f1f1f1;
     }
 
-    &.active {
-      background: #bdd2f6 !important;
+    &.ship-miss {
+      background: #ff0 !important;
     }
 
-    &.highlighted {
-      background: #f6776a;
+    &.active {
+      background: #bdd2f6;
+
+
     }
+
   }
 }
 
@@ -295,7 +307,7 @@ template
 }
 
 .chat-rooms {
-  .highlighted{
+  .highlighted {
     font-weight: bold;
   }
 }

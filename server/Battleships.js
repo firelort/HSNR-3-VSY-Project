@@ -34,7 +34,7 @@ class Battleships extends Game {
             "state": Battleships.StateType.PLACING
         };
 
-        this.roomname = "2::" + player1 + "::" + player2
+        this.roomname = "2::" + player1 + "::" + player2;
 
         this.initSocketListener();
 
@@ -262,7 +262,72 @@ class Battleships extends Game {
                 }
             });
 
+
+            socket.on('battleships game attack', (coordinates) => {
+                console.log("[EVENT] " + this.gameserver.getUsername(socket) + " attackierte:  " + coordinates.row + ":" + coordinates.column)
+
+
+                if (this.whoseTurn() !== socket.id) {
+                    return this.gameserver.chat.to(socket.id).event('Du bist nicht am Zug');
+                }
+                //log(gameserver.getRoomByUser(socket.id));
+
+                //console.log(game.positionShip(coordinates, socket.id));
+                let moveResult = this.attackPosition(coordinates, socket.id);
+
+                if (typeof moveResult === 'string') {
+                    this.gameserver.chat.to(socket.id).event(moveResult);
+                } else if (typeof moveResult === 'object') {
+                    this.gameserver.saveData();
+                    //callback(moveResult);
+                    this.io.to(this.roomname).emit('battleships attack accepted', moveResult);
+                } else {
+                    console.log("[ERROR] battleships game attack gab kein gültiges ergebnis ");
+                }
+
+            });
+
+
         });
+    }
+
+    attackPosition(coordinates, playerId) {
+
+        if (coordinates.row >= 0 && coordinates.row <= 9 && coordinates.column >= 0 && coordinates.column <= 9) {
+            let opponentField = this.players[this.getOpponentId(playerId)].field;
+            console.log('field', opponentField);
+            let currentStateOnPosition = opponentField[coordinates.row][coordinates.column];
+            console.log('currentStateOnPosition', currentStateOnPosition);
+            switch (currentStateOnPosition) {
+                case 0:
+                    // miss
+
+                    opponentField[coordinates.row][coordinates.column] = -1;
+                    this.activePlayer = this.getOpponentId(playerId);
+                    console.log('field after', this.players[this.getOpponentId(playerId)].field)
+                    return {
+                        position: coordinates,
+                        fieldType: -1,
+                        attacker: this.gameserver.getUsername({id: playerId}),
+                    };
+                case 1:
+                    // hit
+                    opponentField[coordinates.row][coordinates.column] = 2;
+                    this.activePlayer = this.getOpponentId(playerId);
+                    return {
+                        position: coordinates,
+                        fieldType: 2,
+                        attacker: this.gameserver.getUsername({id: playerId}),
+                    };
+                case 2:
+                case -1:
+                    // cant hit againin
+                    return "Du kannst kein bereits attackiertes Feld erneut abgreifen.";
+            }
+        } else {
+            console.log("coordinates out of bounds ", coordinates);
+            return "coordinates out of bounds ";
+        }
     }
 
     /**
