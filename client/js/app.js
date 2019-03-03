@@ -175,32 +175,39 @@ $(function () {
             $('div.invite-box div.buttons button.btn-green').data('user', data.user);
             $('div.invite-box div.buttons button.btn-red').data('user', data.user);
             $('div.invite-box')[0].style.zIndex = 100;
-        }).on('battleships player change state', function (playerId, state) {
+        }).on('battleships player change state', function (playerId, state, startPlayer) {
+            let field = document.querySelector('.game-player-turn');
             if (playerId === userid) {
                 playerReady = true;
                 if (enemyReady) {
-                    startPlayingMode()
-                } else
+                    startPlayingMode(startPlayer)
+                } else {
                     chat.message({msg: "Dein Gegner ist noch nicht bereit. Warte einen Augenblick."});
+                    field.innerText = "Warte auf Gegner";
+                }
             } else {
                 enemyReady = true;
                 if (playerReady) {
-                    startPlayingMode()
-                } else
-                    chat.message({msg: "Dein Gegner ist bereit. Lass ihn nicht zu lange warten."})
+                    startPlayingMode(startPlayer)
+                } else {
+                    chat.message({msg: "Dein Gegner ist bereit. Lass ihn nicht zu lange warten."});
+                    field.innerText = "Bitte platziere deine Schiffe - Dein Gegner wartet auf dich";
+                }
             }
 
         }).on('start game battleships', function () {
             clearField();
             createTables();
             createShipCounter();
-
             gameState = 3; // placing
-        }).on('battleships attack accepted', function (moveResult) {
 
+            let field = document.querySelector('.game-player-turn');
+            field.style.visibility = "visible";
+            field.innerText = "Bitte platziere deine Schiffe";
+        }).on('battleships attack accepted', function (moveResult) {
             console.log(moveResult);
             let field;
-
+            let playerInfo = document.querySelector('.game-player-turn');
             if (moveResult.attacker !== username) {
                 field = $('.game-player-container .player-field tr');
             } else {
@@ -208,26 +215,33 @@ $(function () {
             }
 
             switch (moveResult.fieldType) {
-
                 case 2: // hit
                     console.log('hit');
                     field.eq(++moveResult.position.row).find('td').eq(++moveResult.position.column).addClass('ship-hit');
                     break;
                 case -1: //miss
-
                     console.log('miss');
                     field.eq(++moveResult.position.row).find('td').eq(++moveResult.position.column).addClass('ship-miss');
+                    if (moveResult.attacker !== username) {
+                        playerInfo.innerText = "Du bist am Zug!";
+                    } else {
+                        playerInfo.innerText = "Dein Gegner ist am Zug!";
+                    }
                     break;
 
             }
         });
     }
 
-    function startPlayingMode() {
+    function startPlayingMode(startPlayer) {
         gameState = 1; // playing
-        document.querySelector('.player-ships ul').innerHTML = ''; // remove ship counter
-
-
+        let field = document.querySelector('.player-ships ul').innerHTML = ''; // remove ship counter
+        let playerInfo = document.querySelector('.game-player-turn');
+        if (startPlayer !== username) {
+            playerInfo.innerText = "Dein Gegner ist am Zug!";
+        } else {
+            playerInfo.innerText = "Du bist am Zug!";
+        }
     }
 
 

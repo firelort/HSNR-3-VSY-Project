@@ -196,7 +196,8 @@ class Battleships extends Game {
                                     this.players[this.getOpponentId(playerId)].state = Battleships.StateType.PLAYING;
                                     this.players[playerId].state = Battleships.StateType.PLAYING;
                                 }
-                                this.io.to(this.roomname).emit('battleships player change state', playerId, Battleships.StateType.READY);
+
+                                this.io.to(this.roomname).emit('battleships player change state', playerId, Battleships.StateType.READY, this.gameserver.getUsername({id: this.activePlayer}));
 
 
                             }
@@ -304,7 +305,7 @@ class Battleships extends Game {
 
                     opponentField[coordinates.row][coordinates.column] = -1;
                     this.activePlayer = this.getOpponentId(playerId);
-                    console.log('field after', this.players[this.getOpponentId(playerId)].field)
+                    console.log('field after', this.players[this.getOpponentId(playerId)].field);
                     return {
                         position: coordinates,
                         fieldType: -1,
@@ -313,7 +314,7 @@ class Battleships extends Game {
                 case 1:
                     // hit
                     opponentField[coordinates.row][coordinates.column] = 2;
-                    this.activePlayer = this.getOpponentId(playerId);
+                    //this.activePlayer = this.getOpponentId(playerId);
                     return {
                         position: coordinates,
                         fieldType: 2,
