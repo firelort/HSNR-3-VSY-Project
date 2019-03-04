@@ -230,6 +230,10 @@ $(function () {
                     break;
 
             }
+        }).on('battleships game ended', function(){
+            clearField();
+        }).on('leave room', function(){
+            clearField();
         });
     }
 
@@ -256,6 +260,11 @@ $(function () {
 
     function clearField() {
         document.querySelector('.player-ships ul').innerHTML = '';
+        document.querySelector('.game-player-turn').textContent = '';
+        let shipimages = document.querySelectorAll('body >img.ship');
+        shipimages.forEach(function(element) {
+           element.remove();
+        });
         let opponentField = document.querySelector('.game-opponent-container .player-field');
         let playerField = document.querySelector('.game-player-container .player-field')
         if (playerField) playerField.remove();

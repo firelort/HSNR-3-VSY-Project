@@ -79,6 +79,7 @@ io.on('connection', function (socket) {
                         notifySocket = roomData.firstplayer;
                     }
                     chat.to(notifySocket).event("Dein Gegenspieler hat den Raum verlassen");
+                    io.to(`${notifySocket}`).emit('leave room');
                     gameserver.disbandRoom(notifySocket);
 
                     //Let the other player leave the room

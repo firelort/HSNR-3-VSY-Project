@@ -18,6 +18,7 @@ class Battleships extends Game {
                 2: 4
             },
             "shipsInStockCount": 10,
+            "undamagesShipFields": 0,
             "state": Battleships.StateType.PLACING
         };
 
@@ -31,9 +32,15 @@ class Battleships extends Game {
                 2: 4
             },
             "shipsInStockCount": 10,
+            "undamagesShipFields": 0,
             "state": Battleships.StateType.PLACING
         };
 
+        Object.keys(this.players[player1].shipsInStock).forEach(element => {
+            this.players[player1].undamagesShipFields += this.players[player1].shipsInStock[element] * element;
+        });
+
+        this.players[player2].undamagesShipFields = this.players[player1].undamagesShipFields;
         this.roomname = "2::" + player1 + "::" + player2;
 
         this.initSocketListener();
@@ -314,6 +321,17 @@ class Battleships extends Game {
                 case 1:
                     // hit
                     opponentField[coordinates.row][coordinates.column] = 2;
+                    this.players[this.getOpponentId(playerId)].undamagesShipFields--;
+
+                    if (this.players[this.getOpponentId(playerId)].undamagesShipFields === 0) {
+                        // opponent lost
+                        this.io.to(this.roomname).emit('battleships game ended');
+                        this.gameserver.chat.to(this.roomname).event(this.gameserver.getUsername({id: this.activePlayer}) + ' hat das Spiel gewonnen!');
+                        this.gameserver.disbandRoom(playerId);
+                        this.gameserver.disbandRoom(this.getOpponentId(playerId));
+                        this.io.emit('user update', this.gameserver.getUsersInRooms());
+
+                    }
                     //this.activePlayer = this.getOpponentId(playerId);
                     return {
                         position: coordinates,
