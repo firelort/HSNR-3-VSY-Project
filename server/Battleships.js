@@ -238,6 +238,19 @@ class Battleships extends Game {
 
     }
 
+    changeId(oldId, newId, newRoomName) {
+        if (oldId == this.activePlayer) this.activePlayer = newId;
+        this.players[oldId].id = newId;
+        this.players[newId] = {...this.players[oldId]};
+        delete this.players[oldId];
+        this.roomname = newRoomName;
+
+        this.initSocketListener();
+
+
+
+    }
+
     initSocketListener() {
 
         // io.on connection kann nicht genutzt werden da keine Instanz dieser Klasse zu dem Zeitpunkt exisitert
@@ -354,7 +367,11 @@ class Battleships extends Game {
      * @returns {{players: ({}|*)}} Spielerstatistiken
      */
     toJSON() {
-        return {players: this.players};
+        return {
+            players: this.players,
+            roomname: this.roomname,
+            activePlayer: this.activePlayer
+        };
     }
 
 }

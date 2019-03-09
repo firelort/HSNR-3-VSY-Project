@@ -3,6 +3,11 @@ const Battleships = require('./Battleships');
 const TicTacToe = require('./TicTacToe');
 
 
+function log(data) {
+    console.log(require('util').inspect(data, true, 10));
+}
+
+
 class GameServer {
 
     constructor(chat, io) {
@@ -34,6 +39,7 @@ class GameServer {
             socket.on('oldid', (oldid, username) => {
                 console.log(oldid, username, socket.id);
                 this.changeId(oldid, username, socket);
+                socket.emit('newId',socket.id);
             });
 
             socket.on('invite player', (usernameSecond) => {
@@ -206,12 +212,67 @@ class GameServer {
         // console.log(this);
     }
 
+    restoreFromFiles() {
+        this.readData();
+        for (let roomname in this.rooms) {
+            console.log(typeof this.rooms[roomname].game.constructor.name);
+            let roomData = roomname.split('::');
+            if (roomData[0] == '2') {
+                this.rooms[roomname].game = Object.assign(new Battleships(roomData[1], roomData[2], this.io), this.rooms[roomname].game)
+            }
+
+            this.rooms[roomname].game.setGameServer(this);
+            console.log(this.rooms[roomname].game.constructor.name);
+            console.log(this.rooms[roomname].game.players);
+        }
+    }
+
     changeId(oldId, username, newSocket) {
+        if (oldId == newSocket.id || this.usernames[username] == newSocket.id) return false;
         this.usernames[username] = newSocket.id; // rebind username
-        this.user[newSocket.id] = {"name": username}; // rebind user socket
+        this.user[newSocket.id] = {...this.user[oldId]}; // rebind user socket
+        delete this.user[oldId];
         this.updateInviteId(oldId, newSocket.id); // Updaten der Einladung
         //todo updaten der Räume???
-        this.deleteUser({id: oldId});
+
+        if (this.user[newSocket.id].room) {
+            let oldroomname = this.user[newSocket.id].room;
+            let roomData = oldroomname.split('::');
+            let isPlayerOne = roomData[1] == oldId;
+            let newRoomName;
+            if (isPlayerOne) {
+                newRoomName = roomData[0] + '::' + newSocket.id + '::' + roomData[2];
+                this.rooms[oldroomname].firstplayer = newSocket.id;
+                this.user[roomData[2]].room = newRoomName;
+            } else {
+                newRoomName = roomData[0] + '::' + roomData[1] + '::' + newSocket.id;
+                this.rooms[oldroomname].secondplayer = newSocket.id;
+
+                this.user[roomData[1]].room = newRoomName;
+            }
+
+
+            this.user[newSocket.id].room = newRoomName;
+
+
+            this.rooms[oldroomname].game.changeId(oldId, newSocket.id, newRoomName);
+
+            this.rooms[oldroomname].id = newRoomName;
+            this.rooms[newRoomName] = {...this.rooms[oldroomname]};
+
+
+            let gameroom = this.io.sockets.in(oldroomname);
+            Object.keys(gameroom.sockets).forEach((element) => {
+                let socket = gameroom.sockets[element];
+                socket.join(newRoomName);
+                socket.leave(oldroomname);
+            });
+            delete this.rooms[oldroomname];
+
+
+        }
+        //this.deleteUser({id: oldId});
+        this.initSocketListener();
         this.saveData();
     }
 

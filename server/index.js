@@ -15,7 +15,7 @@ function log(data) {
 }
 
 let chat = new Chat(io);
-
+console.log(chat.constructor.name);
 let gameserver = new GameServer(chat, io);
 
 const clientPath = path.resolve(path.dirname(require.main.filename) + '/../client/');
@@ -23,6 +23,8 @@ app.use(express.static(clientPath));
 app.get('/', function (req, res) {
     res.sendFile(clientPath + 'index.html');
 });
+
+
 var donethis = false;
 
 io.on('connection', function (socket) {
@@ -41,7 +43,10 @@ io.on('connection', function (socket) {
         donethis = true;
         console.log("Hauptserver nicht mehr verfügbar");
         // TODO Daten vom ersten Server ziehen -> Ausfallsicherheit!
-        gameserver.readData();
+        gameserver.restoreFromFiles();
+
+        //log(gameserver);
+
     }
 
     /**
