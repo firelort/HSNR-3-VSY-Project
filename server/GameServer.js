@@ -199,10 +199,18 @@ class GameServer {
     saveData() {
         let gamedata = {rooms: this.rooms, user: this.user, usernames: this.usernames, invites: this.invites};
         fs.writeFileSync("userdata.json", JSON.stringify(gamedata, null, 4), 'utf8');
+        fs.writeFileSync("userdata_rec.json", JSON.stringify(gamedata, null, 4), 'utf8');
     }
 
     readData() {
-        let data = fs.readFileSync("userdata.json");
+        let data
+        try {
+            data = fs.readFileSync("userdata.json");
+        } catch (e) {
+            data = fs.readFileSync("userdata_rec.json");
+        } finally {
+            console.log("No files available");
+        }
         data = JSON.parse(data);
         this.invites = data.invites;
         this.rooms = data.rooms;
