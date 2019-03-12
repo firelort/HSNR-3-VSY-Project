@@ -247,20 +247,24 @@ class Battleships extends Game {
         this.players[newId] = {...this.players[oldId]};
         delete this.players[oldId];
         this.roomname = newRoomName;
-        let test = Object.keys(this.players);
-        if (Object.keys(this.io.sockets.sockets).includes(test[0]) && Object.keys(this.io.sockets.sockets).includes(test[1])) {
-            this.io.sockets.sockets[test[0]].join(this.roomname);
-            this.io.sockets.sockets[test[1]].join(this.roomname);
-            this.initSocketListener();
-        }
+
+        this.initSocketListener();
+
+
+
     }
 
     initSocketListener() {
-        let socketList = this.io.sockets.sockets;
-        Object.keys(this.io.sockets.adapter.rooms[this.roomname].sockets).forEach((element) => {
-            let socket = socketList[element];
+
+        // io.on connection kann nicht genutzt werden da keine Instanz dieser Klasse zu dem Zeitpunkt exisitert
+        let gameroom = this.io.sockets.in(this.roomname);
+        Object.keys(gameroom.sockets).forEach((element) => {
+            let socket = gameroom.sockets[element];
+
+            if (socket.eventNames().includes('battleships game move')) return false;
+
             socket.on('battleships game move', (coordinates, callback) => {
-                //console.log("[EVENT] " + this.gameserver.getUsername(socket) + " machte move:  " + coordinates.row + ":" + coordinates.column)
+                console.log("[EVENT] " + this.gameserver.getUsername(socket) + " machte move:  " + coordinates.row + ":" + coordinates.column)
 
                 //log(gameserver.getRoomByUser(socket.id));
                 let game = this.gameserver.getRoomByUser(socket.id).game;
@@ -302,9 +306,7 @@ class Battleships extends Game {
                 } else if (typeof moveResult === 'object') {
                     this.gameserver.saveData();
                     //callback(moveResult);
-                    console.log("RAUMNAME", this.roomname);
-                    console.log(this.io.sockets.adapter.rooms[this.roomname]);
-                    this.io.in(this.roomname).emit('battleships attack accepted', moveResult);
+                    this.io.to(this.roomname).emit('battleships attack accepted', moveResult);
                 } else {
                     console.log("[ERROR] battleships game attack gab kein gültiges ergebnis ");
                 }
