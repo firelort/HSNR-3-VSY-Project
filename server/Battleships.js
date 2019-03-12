@@ -162,7 +162,6 @@ class Battleships extends Game {
     positionShip(position, playerId) {
 
         let field = this.players[playerId].field;
-        //console.log(field);
         let startPosition = {row: -1, column: -1};
         startPosition.row = field.findIndex(row => {
             startPosition.column = row.findIndex(value => value === 3);
@@ -261,7 +260,10 @@ class Battleships extends Game {
         Object.keys(gameroom.sockets).forEach((element) => {
             let socket = gameroom.sockets[element];
 
-            if (socket.eventNames().includes('battleships game move')) return false;
+            if (socket.eventNames().includes('battleships game move')) {
+                socket.removeAllListeners('battleships game move');
+                socket.removeAllListeners('battleships game attack')
+            }
 
             socket.on('battleships game move', (coordinates, callback) => {
                 console.log("[EVENT] " + this.gameserver.getUsername(socket) + " machte move:  " + coordinates.row + ":" + coordinates.column)
@@ -321,7 +323,6 @@ class Battleships extends Game {
 
         if (coordinates.row >= 0 && coordinates.row <= 9 && coordinates.column >= 0 && coordinates.column <= 9) {
             let opponentField = this.players[this.getOpponentId(playerId)].field;
-            //console.log('field', opponentField);
             let currentStateOnPosition = opponentField[coordinates.row][coordinates.column];
             //console.log('currentStateOnPosition', currentStateOnPosition);
             switch (currentStateOnPosition) {
@@ -345,8 +346,8 @@ class Battleships extends Game {
                         // opponent lost
                         this.io.to(this.roomname).emit('battleships game ended');
                         this.gameserver.chat.to(this.roomname).event(this.gameserver.getUsername({id: this.activePlayer}) + ' hat das Spiel gewonnen!');
-                        this.gameserver.disbandRoom(playerId);
                         this.gameserver.disbandRoom(this.getOpponentId(playerId));
+                        this.gameserver.disbandRoom(playerId);
                         this.io.emit('user update', this.gameserver.getUsersInRooms());
 
                     }

@@ -415,6 +415,8 @@ class GameServer {
         this.io.sockets.sockets[socketid].leave(roomName); //pyhsikalisch all done!
 
         if(Object.keys(this.rooms).includes(roomName)) {
+            delete this.rooms[roomName].game.players;
+            delete this.rooms[roomName].game;
             delete this.rooms[roomName];
         }
         delete this.user[socketid].room;
