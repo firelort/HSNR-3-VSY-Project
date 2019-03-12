@@ -233,8 +233,12 @@ $(function () {
 
             }
         }).on('battleships game ended', function () {
+            playerReady = false;
+            enemyReady = false;
             clearField();
         }).on('leave room', function () {
+            playerReady = false;
+            enemyReady = false;
             clearField();
         });
     }

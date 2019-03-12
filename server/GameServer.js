@@ -403,18 +403,13 @@ class GameServer {
     }
 
     disbandRoom(socketid) {
-        delete this.user[socketid].room;
-        let rooms = Object.keys(this.rooms);
-        let entry;
-        for (let index = 0; index < rooms.length; index++) {
-            entry = rooms[index];
-            if (entry.includes(socketid)) {
-                let data = this.rooms[entry];
-                delete this.rooms[entry];
-                data.roomname = entry;
-                return data;
-            }
+        let roomName = this.user[socketid].room;
+        this.io.sockets.sockets[socketid].leave(roomName); //pyhsikalisch all done!
+
+        if(Object.keys(this.rooms).includes(roomName)) {
+            delete this.rooms[roomName];
         }
+        delete this.user[socketid].room;
 
         this.saveData();
     }
