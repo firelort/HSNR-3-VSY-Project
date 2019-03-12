@@ -2,7 +2,6 @@ const fs = require('fs');
 const Battleships = require('./Battleships');
 const TicTacToe = require('./TicTacToe');
 
-
 function log(data) {
     console.log(require('util').inspect(data, true, 10));
 }
@@ -34,10 +33,8 @@ class GameServer {
 
     initSocketListener() {
         this.io.on('connection', (socket) => {
-
-
             socket.on('oldid', (oldid, username) => {
-                console.log(oldid, username, socket.id);
+                //console.log(oldid, username, socket.id);
                 this.changeId(oldid, username, socket);
                 socket.emit('newId',socket.id);
             });
@@ -141,6 +138,9 @@ class GameServer {
                 }
                 // Create a new Room and let the user join
                 let roomname = this.createRoom(data.user, socket.id, data.gametype);
+                this.io.sockets.sockets[this.getUser(data.user)].join(roomname); // Player 1 joins the room
+                socket.join(roomname); // Player 2 joins the room
+
                 let game;
                 if (data.gametype == 2) {
                     game = new Battleships(this.getUser(data.user), socket.id, this.io);
@@ -149,8 +149,6 @@ class GameServer {
                 }
 
                 this.addGame(roomname, game);
-                this.io.sockets.sockets[this.getUser(data.user)].join(roomname); // Player 1 joins the room
-                socket.join(roomname); // Player 2 joins the room
                 this.chat.to(roomname).message("Server", "Good Luck && Have fun");
                 this.io.to(roomname).emit('start game battleships');
                 //todo: maybe let the sockets save the room name
@@ -203,13 +201,15 @@ class GameServer {
     }
 
     readData() {
-        let data
+        let data;
         try {
             data = fs.readFileSync("userdata.json");
         } catch (e) {
-            data = fs.readFileSync("userdata_rec.json");
-        } finally {
-            console.log("No files available");
+            try {
+                data = fs.readFileSync("userdata_rec.json");
+            } catch (e) {
+                console.log("No files available");
+            }
         }
         data = JSON.parse(data);
         this.invites = data.invites;
@@ -217,21 +217,20 @@ class GameServer {
         this.usernames = data.usernames;
         this.user = data.user;
 
-        // console.log(this);
     }
 
     restoreFromFiles() {
         this.readData();
         for (let roomname in this.rooms) {
-            console.log(typeof this.rooms[roomname].game.constructor.name);
+            //console.log(typeof this.rooms[roomname].game.constructor.name);
             let roomData = roomname.split('::');
             if (roomData[0] == '2') {
                 this.rooms[roomname].game = Object.assign(new Battleships(roomData[1], roomData[2], this.io), this.rooms[roomname].game)
             }
 
             this.rooms[roomname].game.setGameServer(this);
-            console.log(this.rooms[roomname].game.constructor.name);
-            console.log(this.rooms[roomname].game.players);
+            //console.log(this.rooms[roomname].game.constructor.name);
+            //console.log(this.rooms[roomname].game.players);
         }
     }
 
@@ -244,42 +243,51 @@ class GameServer {
         //todo updaten der Räume???
 
         if (this.user[newSocket.id].room) {
+
             let oldroomname = this.user[newSocket.id].room;
             let roomData = oldroomname.split('::');
             let isPlayerOne = roomData[1] == oldId;
             let newRoomName;
+            let players = [];
             if (isPlayerOne) {
                 newRoomName = roomData[0] + '::' + newSocket.id + '::' + roomData[2];
                 this.rooms[oldroomname].firstplayer = newSocket.id;
                 this.user[roomData[2]].room = newRoomName;
+                players[0] = newSocket.id;
+                players[1] = roomData[2];
             } else {
                 newRoomName = roomData[0] + '::' + roomData[1] + '::' + newSocket.id;
                 this.rooms[oldroomname].secondplayer = newSocket.id;
 
                 this.user[roomData[1]].room = newRoomName;
+
+                players[0] = roomData[1];
+                players[1] = newSocket.id;
             }
 
 
             this.user[newSocket.id].room = newRoomName;
-
 
             this.rooms[oldroomname].game.changeId(oldId, newSocket.id, newRoomName);
 
             this.rooms[oldroomname].id = newRoomName;
             this.rooms[newRoomName] = {...this.rooms[oldroomname]};
 
-
-            let gameroom = this.io.sockets.in(oldroomname);
-            Object.keys(gameroom.sockets).forEach((element) => {
-                let socket = gameroom.sockets[element];
-                socket.join(newRoomName);
-                socket.leave(oldroomname);
-            });
             delete this.rooms[oldroomname];
 
+            // Testen ob der andere Spieler schon neuverbunden hat
+            console.log("Socketlliste", Object.keys(this.io.sockets.sockets), players[0], players[1]);
+            if (Object.keys(this.io.sockets.sockets).includes(players[0]) && Object.keys(this.io.sockets.sockets).includes(players[1])) {
+                console.log("Hello");
+                let socketList = this.io.sockets.sockets;
+                socketList[players[0]].join(newRoomName);
+                socketList[players[1]].join(newRoomName);
+                console.log(Object.keys(this.io.sockets.adapter.rooms));
+                this.rooms[newRoomName].game.initSocketListener();
+            }
 
         }
-        //this.deleteUser({id: oldId});
+
         this.initSocketListener();
         this.saveData();
     }
