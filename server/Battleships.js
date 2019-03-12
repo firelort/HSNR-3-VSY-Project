@@ -43,7 +43,11 @@ class Battleships extends Game {
         this.players[player2].undamagesShipFields = this.players[player1].undamagesShipFields;
         this.roomname = "2::" + player1 + "::" + player2;
 
-        this.initSocketListener();
+        if (Object.keys(this.io.sockets.sockets).includes(player1) || Object.keys(this.io.sockets.sockets).includes(player2)) {
+            this.io.sockets.sockets[player1].join(this.roomname);
+            this.io.sockets.sockets[player2].join(this.roomname);
+            this.initSocketListener();
+        }
 
     };
 
@@ -239,6 +243,8 @@ class Battleships extends Game {
     }
 
     changeId(oldId, newId, newRoomName) {
+
+
         if (oldId == this.activePlayer) this.activePlayer = newId;
         this.players[oldId].id = newId;
         this.players[newId] = {...this.players[oldId]};
@@ -246,7 +252,6 @@ class Battleships extends Game {
         this.roomname = newRoomName;
 
         this.initSocketListener();
-
 
 
     }
@@ -257,6 +262,8 @@ class Battleships extends Game {
         let gameroom = this.io.sockets.in(this.roomname);
         Object.keys(gameroom.sockets).forEach((element) => {
             let socket = gameroom.sockets[element];
+
+            if (socket.eventNames().includes('battleships game move')) return false;
 
             socket.on('battleships game move', (coordinates, callback) => {
                 console.log("[EVENT] " + this.gameserver.getUsername(socket) + " machte move:  " + coordinates.row + ":" + coordinates.column)
@@ -308,8 +315,14 @@ class Battleships extends Game {
 
             });
 
+            console.log('eventnames',);
+
 
         });
+
+
+
+
     }
 
     attackPosition(coordinates, playerId) {

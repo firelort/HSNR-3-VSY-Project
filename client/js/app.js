@@ -45,6 +45,7 @@ $(function () {
 
     socket = io.connect('http://localhost', {
         'reconnection': true,
+        forceNew: true,
         'reconnectionDelay': 1000,
         'reconnectionDelayMax': 5000,
         'reconnectionAttempts': 1
@@ -84,8 +85,8 @@ $(function () {
     function handleNoConnect() {
         if (!donethis) {
 
-
-            delete socket;
+            donethis = true;
+            // delete socket;
             socket = io.connect('http://localhost:3000', {
                 'forceNew': true,
                 'reconnection': true,
@@ -93,10 +94,11 @@ $(function () {
                 'reconnectionDelayMax': 5000,
                 'reconnectionAttempts': 2
             });
+
             socket.on('connect_error', handleNoConnect2);
             socket.on('connect_timeout', handleNoConnect2);
             socket.on('connect', onConnect);
-            donethis = !donethis;
+
         }
     }
 
@@ -111,7 +113,7 @@ $(function () {
         }
         userid = socket.id;
 
-
+        console.log("connlistener", socket.listeners('connect'));
         // set other event handlers on a connected socket
         socket.on('disconnect', function () {
 
@@ -230,9 +232,9 @@ $(function () {
                     break;
 
             }
-        }).on('battleships game ended', function(){
+        }).on('battleships game ended', function () {
             clearField();
-        }).on('leave room', function(){
+        }).on('leave room', function () {
             clearField();
         });
     }
@@ -262,8 +264,8 @@ $(function () {
         document.querySelector('.player-ships ul').innerHTML = '';
         document.querySelector('.game-player-turn').textContent = '';
         let shipimages = document.querySelectorAll('body >img.ship');
-        shipimages.forEach(function(element) {
-           element.remove();
+        shipimages.forEach(function (element) {
+            element.remove();
         });
         let opponentField = document.querySelector('.game-opponent-container .player-field');
         let playerField = document.querySelector('.game-player-container .player-field')

@@ -39,7 +39,7 @@ class GameServer {
             socket.on('oldid', (oldid, username) => {
                 console.log(oldid, username, socket.id);
                 this.changeId(oldid, username, socket);
-                socket.emit('newId',socket.id);
+                socket.emit('newId', socket.id);
             });
 
             socket.on('invite player', (usernameSecond) => {
@@ -250,7 +250,7 @@ class GameServer {
 
                 this.user[roomData[1]].room = newRoomName;
             }
-
+            console.log("pre join", this.io.sockets.adapter.rooms);
 
             this.user[newSocket.id].room = newRoomName;
 
@@ -260,13 +260,19 @@ class GameServer {
             this.rooms[oldroomname].id = newRoomName;
             this.rooms[newRoomName] = {...this.rooms[oldroomname]};
 
-
-            let gameroom = this.io.sockets.in(oldroomname);
-            Object.keys(gameroom.sockets).forEach((element) => {
-                let socket = gameroom.sockets[element];
-                socket.join(newRoomName);
-                socket.leave(oldroomname);
+            console.log('oldroomname', oldroomname);
+            let gameroom = this.io.sockets.connected;
+           // console.log("gameroom", gameroom);
+            Object.keys(this.rooms[oldroomname].game.players).forEach((element) => {
+                console.log("id", element);
+                let socket = gameroom[element];
+                if (socket) {
+                    socket.join(newRoomName);
+                    socket.leave(oldroomname);
+                }
             });
+
+            console.log("post join", this.io.sockets.adapter.rooms);
             delete this.rooms[oldroomname];
 
 
