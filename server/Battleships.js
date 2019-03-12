@@ -48,7 +48,6 @@ class Battleships extends Game {
             this.io.sockets.sockets[player2].join(this.roomname);
             this.initSocketListener();
         }
-
     };
 
     static get FieldType() {
@@ -169,9 +168,9 @@ class Battleships extends Game {
             startPosition.column = row.findIndex(value => value === 3);
             return startPosition.column !== -1;
         });
-        console.log(startPosition);
+        //console.log(startPosition);
         let hasStartPosition = (startPosition.row !== -1 && startPosition.column !== -1);
-        console.log("has start", hasStartPosition);
+        //console.log("has start", hasStartPosition);
 
 
         if (startPosition.row === position.row && startPosition.column === position.column) {
@@ -243,8 +242,6 @@ class Battleships extends Game {
     }
 
     changeId(oldId, newId, newRoomName) {
-
-
         if (oldId == this.activePlayer) this.activePlayer = newId;
         this.players[oldId].id = newId;
         this.players[newId] = {...this.players[oldId]};
@@ -252,6 +249,7 @@ class Battleships extends Game {
         this.roomname = newRoomName;
 
         this.initSocketListener();
+
 
 
     }
@@ -282,7 +280,7 @@ class Battleships extends Game {
                     } else {
                         console.log("[ERROR] battleships game move gab kein gültiges ergebnis ");
                     }
-                    console.log(game.player1Field, game.player2Field);
+                    //console.log(game.player1Field, game.player2Field);
 
 
                 } else {
@@ -315,30 +313,24 @@ class Battleships extends Game {
 
             });
 
-            console.log('eventnames',);
-
 
         });
-
-
-
-
     }
 
     attackPosition(coordinates, playerId) {
 
         if (coordinates.row >= 0 && coordinates.row <= 9 && coordinates.column >= 0 && coordinates.column <= 9) {
             let opponentField = this.players[this.getOpponentId(playerId)].field;
-            console.log('field', opponentField);
+            //console.log('field', opponentField);
             let currentStateOnPosition = opponentField[coordinates.row][coordinates.column];
-            console.log('currentStateOnPosition', currentStateOnPosition);
+            //console.log('currentStateOnPosition', currentStateOnPosition);
             switch (currentStateOnPosition) {
                 case 0:
                     // miss
 
                     opponentField[coordinates.row][coordinates.column] = -1;
                     this.activePlayer = this.getOpponentId(playerId);
-                    console.log('field after', this.players[this.getOpponentId(playerId)].field);
+                    //console.log('field after', this.players[this.getOpponentId(playerId)].field);
                     return {
                         position: coordinates,
                         fieldType: -1,
