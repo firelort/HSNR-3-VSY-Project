@@ -43,8 +43,11 @@ class Battleships extends Game {
         this.players[player2].undamagesShipFields = this.players[player1].undamagesShipFields;
         this.roomname = "2::" + player1 + "::" + player2;
 
-        this.initSocketListener();
-
+        if (Object.keys(this.io.sockets.sockets).includes(player1) || Object.keys(this.io.sockets.sockets).includes(player2)) {
+            this.io.sockets.sockets[player1].join(this.roomname);
+            this.io.sockets.sockets[player2].join(this.roomname);
+            this.initSocketListener();
+        }
     };
 
     static get FieldType() {
@@ -165,9 +168,9 @@ class Battleships extends Game {
             startPosition.column = row.findIndex(value => value === 3);
             return startPosition.column !== -1;
         });
-        console.log(startPosition);
+        //console.log(startPosition);
         let hasStartPosition = (startPosition.row !== -1 && startPosition.column !== -1);
-        console.log("has start", hasStartPosition);
+        //console.log("has start", hasStartPosition);
 
 
         if (startPosition.row === position.row && startPosition.column === position.column) {
@@ -244,22 +247,20 @@ class Battleships extends Game {
         this.players[newId] = {...this.players[oldId]};
         delete this.players[oldId];
         this.roomname = newRoomName;
-
-        this.initSocketListener();
-
-
-
+        let test = Object.keys(this.players);
+        if (Object.keys(this.io.sockets.sockets).includes(test[0]) && Object.keys(this.io.sockets.sockets).includes(test[1])) {
+            this.io.sockets.sockets[test[0]].join(this.roomname);
+            this.io.sockets.sockets[test[1]].join(this.roomname);
+            this.initSocketListener();
+        }
     }
 
     initSocketListener() {
-
-        // io.on connection kann nicht genutzt werden da keine Instanz dieser Klasse zu dem Zeitpunkt exisitert
-        let gameroom = this.io.sockets.in(this.roomname);
-        Object.keys(gameroom.sockets).forEach((element) => {
-            let socket = gameroom.sockets[element];
-
+        let socketList = this.io.sockets.sockets;
+        Object.keys(this.io.sockets.adapter.rooms[this.roomname].sockets).forEach((element) => {
+            let socket = socketList[element];
             socket.on('battleships game move', (coordinates, callback) => {
-                console.log("[EVENT] " + this.gameserver.getUsername(socket) + " machte move:  " + coordinates.row + ":" + coordinates.column)
+                //console.log("[EVENT] " + this.gameserver.getUsername(socket) + " machte move:  " + coordinates.row + ":" + coordinates.column)
 
                 //log(gameserver.getRoomByUser(socket.id));
                 let game = this.gameserver.getRoomByUser(socket.id).game;
@@ -275,7 +276,7 @@ class Battleships extends Game {
                     } else {
                         console.log("[ERROR] battleships game move gab kein gültiges ergebnis ");
                     }
-                    console.log(game.player1Field, game.player2Field);
+                    //console.log(game.player1Field, game.player2Field);
 
 
                 } else {
@@ -301,7 +302,9 @@ class Battleships extends Game {
                 } else if (typeof moveResult === 'object') {
                     this.gameserver.saveData();
                     //callback(moveResult);
-                    this.io.to(this.roomname).emit('battleships attack accepted', moveResult);
+                    console.log("RAUMNAME", this.roomname);
+                    console.log(this.io.sockets.adapter.rooms[this.roomname]);
+                    this.io.in(this.roomname).emit('battleships attack accepted', moveResult);
                 } else {
                     console.log("[ERROR] battleships game attack gab kein gültiges ergebnis ");
                 }
@@ -316,16 +319,16 @@ class Battleships extends Game {
 
         if (coordinates.row >= 0 && coordinates.row <= 9 && coordinates.column >= 0 && coordinates.column <= 9) {
             let opponentField = this.players[this.getOpponentId(playerId)].field;
-            console.log('field', opponentField);
+            //console.log('field', opponentField);
             let currentStateOnPosition = opponentField[coordinates.row][coordinates.column];
-            console.log('currentStateOnPosition', currentStateOnPosition);
+            //console.log('currentStateOnPosition', currentStateOnPosition);
             switch (currentStateOnPosition) {
                 case 0:
                     // miss
 
                     opponentField[coordinates.row][coordinates.column] = -1;
                     this.activePlayer = this.getOpponentId(playerId);
-                    console.log('field after', this.players[this.getOpponentId(playerId)].field);
+                    //console.log('field after', this.players[this.getOpponentId(playerId)].field);
                     return {
                         position: coordinates,
                         fieldType: -1,
